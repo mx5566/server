@@ -33,7 +33,7 @@ func main() {
 		}
 
 		serData, _ := proto.Marshal(&data)
-		fmt.Println("send data len ", len(serData))
+		fmt.Println("send data len ", len(serData), "i :", i)
 
 		msg := new(network.MsgPacket)
 		msg.MsgId = crc32.ChecksumIEEE([]byte(base.GetMessageName(&data)))
