@@ -170,7 +170,7 @@ func (p *ClientSession) HandlePacket(connId uint32, msg *network.MsgPacket) {
 }
 
 func (p *ClientSession) HandleTest(test *pb.Test) {
-	log.Printf("接收打破数据")
+	log.Printf("接收测试数据 Name: %s, Password: %s\n", test.Name, test.PassWord)
 }
 
 func (p *ClientSession) HandleAuth(connId uint32, msg *network.MsgPacket) bool {

@@ -85,7 +85,7 @@ func (e *Entity) Call(packet pb.RpcPacket) {
 
 		dec.DecodeValue(paramsValue)
 
-		ps[i] = paramsValue
+		ps[i] = paramsValue.Elem()
 	}
 
 	rets := v.Func.Call(ps)
