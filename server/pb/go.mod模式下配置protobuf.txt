@@ -1,0 +1,16 @@
+go mod  模式下面
+    go get  -u -v github.com/golang/protobuf/protoc-gen-go  (https://github.com/golang/protobuf/releases)  
+	--在http://goproxy.cn配置的情况下比较容易下载 可以去缓存目录下面bin目录好到protoc-gen-go.exe
+	
+	protobuf的relaease的目录
+	--https://github.com/protocolbuffers/protobuf/releases
+	--可以直接喜下载已经编译好的二进制文件 protoc
+
+
+1、在工程目录下面新建一个目录proto
+2、使用go mod的列表  go mod init proto
+3、把protoc、protoc-gen-go.exe写一个bat文件去生成对应的pb文件
+3、然后就可以使用工程产生的 mod名字去应用这个模块
+	(导入流程 "github.com/golang/protobuf/proto"、"github.com/xiaonanln/goworld/proto"(pb文件目录))
+	
+	

@@ -1,0 +1,23 @@
+syntax = "proto3";
+option go_package=".;pb";
+
+message RpcHead {
+    string ClassName =1;    // 哪个类里面的函数
+    string FuncName = 2;    // 函数名、
+    uint32 SrcServerID =3;  //来自与那个服务器ID
+    uint32 DestServerID = 4; // 目的服务器的ID
+    uint32 DestServerType = 5;
+}
+
+message RpcPacket {
+    RpcHead head = 1;   // 头
+    bytes buff =2;      // 所有的参数的二进制序列话数据
+}
+
+message Packet {
+    uint32 Id = 1;
+    bytes buff = 2;
+}
+
+
+
