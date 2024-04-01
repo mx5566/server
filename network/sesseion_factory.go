@@ -18,7 +18,7 @@ type ISessionFactory interface {
 	GetID() int
 }
 
-var GSessionFactoryMgr SessionFactoryMgr
+var GSessionFactoryMgr = CreateFactoryMgr()
 
 type SessionFactoryMgr struct {
 	factorys map[int]ISessionFactory

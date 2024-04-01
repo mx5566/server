@@ -6,10 +6,14 @@ import (
 	"github.com/mx5566/server/server/pb"
 )
 
-var GEntityMgr EntityMgr
+var GEntityMgr = CreateEntityMgr()
 
 type EntityMgr struct {
 	Entitys map[string]IEntity // 全局注册 一个类只有个注册，不管有多少个对象
+}
+
+func CreateEntityMgr() *EntityMgr {
+	return &EntityMgr{Entitys: map[string]IEntity{}}
 }
 
 // 注册是全局的 只有一次注册
@@ -18,13 +22,15 @@ type EntityMgr struct {
 func (m *EntityMgr) RegisterEntity(entity IEntity) {
 	name := base.GetClassName(entity)
 
-	if _, ok := m.Entitys[name]; !ok {
+	if _, ok := m.Entitys[name]; ok {
 		logm.PanicfE("重复的注册实体Name: %s \n", name)
 		return
 	}
 
 	// 记录实体名字和实体的映射
 	m.Entitys[name] = entity
+
+	entity.Register(entity)
 }
 
 func (m *EntityMgr) Call(packet pb.RpcPacket) {

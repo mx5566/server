@@ -142,7 +142,7 @@ func (f *FastQueue[T]) PopFront() {
 
 func (f *FastQueue[T]) IsEmpty() bool {
 	f.Lock()
-	ret := (f.size != 0)
+	ret := (f.size == 0)
 	f.UnLock()
 	return ret
 }

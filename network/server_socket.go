@@ -59,6 +59,7 @@ func (s *ServerSocket) DelConn(ConnId uint32) {
 
 func (s *ServerSocket) AddConn(conn *net.TCPConn) {
 	ssc := new(ServerSocketClient)
+	ssc.SetSessionType(s.GetSessionType())
 
 	barray := strings.Split(conn.RemoteAddr().String(), ":")
 	ret, _ := strconv.Atoi(barray[1])
@@ -67,7 +68,6 @@ func (s *ServerSocket) AddConn(conn *net.TCPConn) {
 	ssc.conn = conn
 	ssc.connId = atomic.AddUint32(&s.rndId, 1)
 	ssc.sc = s
-	ssc.SetSessionType(s.GetSessionType())
 
 	s.clientMutex.Lock()
 	s.Clients[ssc.connId] = ssc

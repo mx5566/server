@@ -20,6 +20,7 @@ func (s *ServerSocketClient) Init(ip string, port uint16) bool {
 	s.Socket.Init(ip, port)
 
 	factory := GSessionFactoryMgr.GetFactory(int(s.GetSessionType()))
+
 	s.session = factory.CreateSession()
 	s.session.SetSocket(s)
 	s.session.SetFactory(factory)

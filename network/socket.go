@@ -126,7 +126,7 @@ func (s *Socket) ReceivePacket(data []byte) bool {
 		}
 
 		//
-		msgLen := binary.BigEndian.Uint16(buff[curSize+2 : curSize+TcpHeadSize])
+		msgLen := binary.BigEndian.Uint16(buff[curSize+TcpIDLength : curSize+TcpHeadSize])
 
 		// 包的大小超过最大包的大小，无效包丢弃
 		if int(TcpHeadSize+msgLen) > s.nMaxReceBuffSize {

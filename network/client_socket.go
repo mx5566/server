@@ -22,8 +22,8 @@ func (s *ClientSocket) Init(ip string, port uint16) bool {
 		return false
 	}
 
-	factory := GSessionFactoryMgr.GetFactory(1)
-	s.session = factory.CreateSession()
+	s.session = new(Session)
+	s.session.Init()
 
 	return true
 }

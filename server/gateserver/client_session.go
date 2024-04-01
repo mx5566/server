@@ -9,6 +9,8 @@ import (
 	"github.com/mx5566/server/entity"
 	"github.com/mx5566/server/network"
 	"github.com/mx5566/server/server/pb"
+	"hash/crc32"
+	"log"
 	"reflect"
 	"strings"
 )
@@ -21,8 +23,8 @@ const (
 
 type ClientSession struct {
 	network.Session
-	gameID uint32
-	entity entity.IEntity // 对象
+	gameID        uint32
+	entity.Entity // 对象
 
 }
 
@@ -38,7 +40,7 @@ func (p *ClientSession) Update() {
 		return
 	}
 
-	if !p.Session.DealQueue.IsEmpty() && p.ReceQueue.IsEmpty() {
+	if p.Session.DealQueue.IsEmpty() && !p.ReceQueue.IsEmpty() {
 		p.DealQueue.Copy(p.ReceQueue)
 	}
 
@@ -51,23 +53,23 @@ func (p *ClientSession) Update() {
 
 func (p *ClientSession) Init() {
 	// 初始化实体
-	p.entity.Init()
-	// 把实体注册进实体管理器
-
+	p.Entity.Init()
 	p.Session.Init()
 
-	p.RegisterPacket(1, network.HandleRegister{Handle: p.HandleAuth})
-	p.RegisterPacket(2, network.HandleRegister{Status: Send_Game})
-	p.RegisterPacket(2, network.HandleRegister{Status: Send_Game})
+	//p.RegisterPacket(1, network.HandleRegister{Handle: p.HandleAuth})
+	//p.RegisterPacket(2, network.HandleRegister{Status: Send_Game})
+	//p.RegisterPacket(2, network.HandleRegister{Status: Send_Game})
 
-	p.RegisterPacketEx(&pb.Person{}, "gateserver<-ClientSession.HandleTest")
+	p.RegisterPacketEx(&pb.Test{}, "gateserver<-ClientSession.HandleTest")
+
+	GSessionMgr.AddSession(p)
 }
 
 func (p *ClientSession) RegisterPacketEx(msgName proto.Message, funcName string) {
 	name := base.GetMessageName(msgName)
 
 	packetFunc := func() proto.Message {
-		val := reflect.ValueOf(msgName)
+		val := reflect.ValueOf(msgName).Elem()
 		e := reflect.New(val.Type())
 		e.Elem().Field(3).Set(val.Field(3))
 
@@ -79,7 +81,7 @@ func (p *ClientSession) RegisterPacketEx(msgName proto.Message, funcName string)
 	hr.FuncName = funcName
 
 	p.Session.HrsStr[string(name)] = hr
-
+	p.Session.HrsId[crc32.ChecksumIEEE([]byte(name))] = hr
 }
 
 func (p *ClientSession) RegisterPacket(msgId uint32, hr network.HandleRegister) {
@@ -167,8 +169,8 @@ func (p *ClientSession) HandlePacket(connId uint32, msg *network.MsgPacket) {
 	*/
 }
 
-func (p *ClientSession) HandleTest(connId uint32, test pb.Test) {
-
+func (p *ClientSession) HandleTest(test *pb.Test) {
+	log.Printf("接收打破数据")
 }
 
 func (p *ClientSession) HandleAuth(connId uint32, msg *network.MsgPacket) bool {

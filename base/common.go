@@ -31,5 +31,9 @@ func GetMessageName(msg proto.Message) string {
 }
 
 func GetClassName(class interface{}) string {
-	return reflect.TypeOf(class).Name()
+	rType := reflect.TypeOf(class)
+	if rType.Kind() == reflect.Ptr {
+		rType = rType.Elem()
+	}
+	return rType.Name()
 }

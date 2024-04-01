@@ -1,9 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/golang/protobuf/proto"
+	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/network"
+	"github.com/mx5566/server/server/pb"
+	"hash/crc32"
 	"time"
 )
 
@@ -12,19 +15,21 @@ type clientData struct {
 }
 
 func main() {
+
 	client := new(network.ClientSocket)
 	client.Init("127.0.0.1", 8080)
 	client.Start()
 
-	data := clientData{
-		ID: 10,
+	data := pb.Test{
+		Name:     "mengxiang",
+		PassWord: "990000",
 	}
 
-	serData, _ := json.Marshal(&data)
+	serData, _ := proto.Marshal(&data)
 	fmt.Println("send data len ", len(serData))
 
 	msg := new(network.MsgPacket)
-	msg.MsgId = 1001
+	msg.MsgId = crc32.ChecksumIEEE([]byte(base.GetMessageName(&data)))
 	msg.MsgBody = serData
 
 	dp := network.DataPacket{}
@@ -32,7 +37,7 @@ func main() {
 
 	client.Send(buff)
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(100 * time.Second)
 
 	client.Stop()
 }
