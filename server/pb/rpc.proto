@@ -7,6 +7,8 @@ message RpcHead {
     uint32 SrcServerID =3;  //来自与那个服务器ID
     uint32 DestServerID = 4; // 目的服务器的ID
     uint32 DestServerType = 5;
+    int64 ID = 6;   //
+    uint32 ConnID = 7;
 }
 
 message RpcPacket {

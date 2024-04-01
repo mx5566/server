@@ -15,12 +15,6 @@ import (
 	"strings"
 )
 
-const (
-	Send_Game = iota
-	Send_Gate
-	Send_Login
-)
-
 type ClientSession struct {
 	network.Session
 	gameID        uint32
@@ -30,7 +24,7 @@ type ClientSession struct {
 
 func NewSession() network.ISession {
 	s := &ClientSession{}
-	s.Init()
+	//s.Init()
 	return s
 }
 
@@ -50,8 +44,12 @@ func (p *ClientSession) Update() {
 		}
 	}
 }
+func (p *ClientSession) SendGameServer(connId uint32) {
+
+}
 
 func (p *ClientSession) Init() {
+	p.SetID(int64(p.GetSocket().GetConnId()))
 	// 初始化实体
 	p.Entity.Init()
 	p.Session.Init()
@@ -61,6 +59,7 @@ func (p *ClientSession) Init() {
 	//p.RegisterPacket(2, network.HandleRegister{Status: Send_Game})
 
 	p.RegisterPacketEx(&pb.Test{}, "gateserver<-ClientSession.HandleTest")
+	p.RegisterPacketEx(&pb.Disconnect{}, "gateserver<-ClientSession.HandleDisconnect")
 
 	GSessionMgr.AddSession(p)
 }
@@ -113,11 +112,11 @@ func (p *ClientSession) HandlePacket(connId uint32, msg *network.MsgPacket) {
 	if len(strs) == 2 {
 		switch strs[0] {
 		case "gateserver":
-			head.DestServerType = Send_Gate
+			head.DestServerType = network.Send_Gate
 		case "gameserver":
-			head.DestServerType = Send_Game
+			head.DestServerType = network.Send_Game
 		case "loginserver":
-			head.DestServerType = Send_Login
+			head.DestServerType = network.Send_Login
 		}
 
 		funcName = strs[1]
@@ -132,6 +131,8 @@ func (p *ClientSession) HandlePacket(connId uint32, msg *network.MsgPacket) {
 
 	head.SrcServerID = SERVER.GetID()
 	head.FuncName = funcName
+	head.ConnID = connId
+	head.ID = p.GetID()
 
 	rpcPacket := pb.RpcPacket{}
 	rpcPacket.Head = head
@@ -141,32 +142,17 @@ func (p *ClientSession) HandlePacket(connId uint32, msg *network.MsgPacket) {
 	enc.Encode(protoMsg)
 	rpcPacket.Buff = buf.Bytes()
 
-	if head.DestServerType == Send_Game {
+	if head.DestServerType == network.Send_Game {
 		//
-	} else if head.DestServerType == Send_Gate {
+	} else if head.DestServerType == network.Send_Gate {
 		// 加入是本地的话调用本地的方法
 		// 我们需要根据类名 函数名 找到方法然后调用
 		// 可以通过反射动态的获取方法，并且调用方法
 		entity.GEntityMgr.Call(rpcPacket)
-	} else if head.DestServerType == Send_Login {
+	} else if head.DestServerType == network.Send_Login {
 
 	}
 
-	/*
-		if _, ok := p.Hrs[msg.MsgId]; ok {
-			if p.Hrs[msg.MsgId].Handle != nil {
-				p.Hrs[msg.MsgId].Handle(connId, msg)
-			} else {
-				// 没找到处理函数 根据状态发送到指定的服务器
-				switch p.Hrs[msg.MsgId].Status {
-				// gameserver游戏服务器
-				case 1:
-				case 2:
-				default:
-				}
-			}
-		}
-	*/
 }
 
 func (p *ClientSession) HandleTest(test *pb.Test) {
@@ -175,4 +161,11 @@ func (p *ClientSession) HandleTest(test *pb.Test) {
 
 func (p *ClientSession) HandleAuth(connId uint32, msg *network.MsgPacket) bool {
 	return true
+}
+
+func (p *ClientSession) HandleDisconnect(dis *pb.Disconnect) {
+	log.Printf("客户端断开连接:%d\n", dis.ConnId)
+
+	GSessionMgr.DelSession(p.GetID())
+
 }

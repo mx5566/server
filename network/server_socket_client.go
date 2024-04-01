@@ -2,7 +2,10 @@ package network
 
 import (
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"github.com/mx5566/server/base"
+	"github.com/mx5566/server/server/pb"
+	"hash/crc32"
 	"io"
 )
 
@@ -24,6 +27,7 @@ func (s *ServerSocketClient) Init(ip string, port uint16) bool {
 	s.session = factory.CreateSession()
 	s.session.SetSocket(s)
 	s.session.SetFactory(factory)
+	s.session.Init()
 
 	return true
 }
@@ -86,12 +90,18 @@ func (s *ServerSocketClient) Run() bool {
 
 func (s *ServerSocketClient) OnNetFail() {
 	// 连接断开了，需要通知到上层逻辑
+	// 如果是客户端
 	msg := new(MsgPacket)
-	msg.MsgId = 1
+	msg.MsgId = crc32.ChecksumIEEE([]byte("Disconnect"))
+	dis := &pb.Disconnect{}
+	dis.ConnId = s.connId
+
+	data, _ := proto.Marshal(dis)
+	msg.MsgBody = data
 
 	s.session.AddQueue(msg)
 
+	// 底层网路删除
 	s.Stop()
-
 	s.sc.DelConn(s.connId)
 }

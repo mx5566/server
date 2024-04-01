@@ -1,11 +1,19 @@
 package entity
 
 import (
+	"github.com/mx5566/server/server/pb"
 	"reflect"
 	"sync"
 )
 
+type Opts struct {
+}
+
 type IEntityPool interface {
+	AddEntity(entity IEntity)
+	DelEntity(ID int64)
+	GetEntity(ID int64) IEntity
+	CallEntity(packet pb.RpcPacket)
 }
 
 type EntityPool struct {
@@ -22,10 +30,13 @@ func (p *EntityPool) InitPool(rType reflect.Type) {
 	p.entity = reflect.New(rType).Interface().(IEntity)
 
 	// 把类型注册到全局的类型管理器
-	GEntityMgr.RegisterEntity(p.entity)
+	GEntityMgr.RegisterEntity(p.entity, WithType(EntityType_Pool), WithPool(p))
 }
 
 func (p *EntityPool) AddEntity(entity IEntity) {
+	// 一个真实的实体
+	entity.Register(entity)
+
 	p.entityMap[entity.GetID()] = entity
 }
 
@@ -39,6 +50,13 @@ func (p *EntityPool) GetEntity(ID int64) IEntity {
 	}
 
 	return nil
+}
+
+func (p *EntityPool) CallEntity(packet pb.RpcPacket) {
+	ent := p.GetEntity(packet.Head.ID)
+	if ent != nil {
+		ent.Call(packet)
+	}
 }
 
 func (p *EntityPool) Update() {

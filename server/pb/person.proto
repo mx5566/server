@@ -16,3 +16,8 @@ message Test {
   string Name = 1;
   string PassWord =2;
 }
+
+// 内部消息
+message Disconnect {
+  uint32 connId = 1;
+}

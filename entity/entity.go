@@ -12,13 +12,25 @@ import (
 
 var gEntityID int64
 
+type EntityType uint16
+
+const (
+	EntityType_Single EntityType = iota
+	EntityType_Pool
+)
+
 type IEntity interface {
 	Init()
 	GetID() int64
+	SetID(int64)
 	IsExistMethod(funcName string) bool
 	Call(pb.RpcPacket)
 	Update()
 	Register(entity IEntity)
+	GetEntityType() EntityType
+	GetEntityPool() IEntityPool
+	SetEntityPool(pool IEntityPool)
+	SetEntityType(EntityType)
 }
 
 type Entity struct {
@@ -26,6 +38,8 @@ type Entity struct {
 	EntityName string
 	rType      reflect.Type
 	rVal       reflect.Value
+	pool       IEntityPool
+	entityType EntityType
 }
 
 func (e *Entity) Init() {
@@ -34,9 +48,30 @@ func (e *Entity) Init() {
 	}
 }
 
+func (e *Entity) SetID(iD int64) {
+	e.ID = iD
+}
+
+func (e *Entity) SetEntityType(entityType EntityType) {
+	e.entityType = entityType
+}
+
+func (e *Entity) GetEntityType() EntityType {
+	return e.entityType
+}
+
+func (e *Entity) GetEntityPool() IEntityPool {
+	return e.pool
+}
+
+func (e *Entity) SetEntityPool(pool IEntityPool) {
+	e.pool = pool
+}
+
 func (e *Entity) Register(entity IEntity) {
 	e.rType = reflect.TypeOf(entity)
 	e.rVal = reflect.ValueOf(entity)
+	e.EntityName = base.GetClassName(entity)
 }
 
 func (e *Entity) GetID() int64 {
@@ -61,14 +96,8 @@ func (e *Entity) Call(packet pb.RpcPacket) {
 		logm.ErrorfE("方法不存在:%s\n", head.FuncName)
 		return
 	}
-
-	// e.rVal.MethodByName("").Call()
 	// 参数的个数
 	nCount := v.Type.NumIn()
-
-	//nCount1 := e.rVal.MethodByName(head.FuncName).Type().NumIn()
-
-	//fmt.Println("-------------%d", nCount1)
 
 	// 把所有的参数修改为valueof类型
 	ps := make([]reflect.Value, nCount)
