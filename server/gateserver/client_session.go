@@ -1,8 +1,7 @@
 package gateserver
 
 import (
-	"bytes"
-	"encoding/gob"
+	"context"
 	"github.com/golang/protobuf/proto"
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
@@ -12,7 +11,6 @@ import (
 	"hash/crc32"
 	"log"
 	"reflect"
-	"strings"
 )
 
 type ClientSession struct {
@@ -26,6 +24,11 @@ func NewSession() network.ISession {
 	s := &ClientSession{}
 	//s.Init()
 	return s
+}
+
+func (p *ClientSession) SendToGameServer(funcName string, head pb.RpcHead, packet pb.Packet) {
+	head.DestServerType = network.Send_Game
+
 }
 
 func (p *ClientSession) Update() {
@@ -43,9 +46,6 @@ func (p *ClientSession) Update() {
 			p.HandlePacket(socket.GetConnId(), data)
 		}
 	}
-}
-func (p *ClientSession) SendGameServer(connId uint32) {
-
 }
 
 func (p *ClientSession) Init() {
@@ -102,48 +102,23 @@ func (p *ClientSession) HandlePacket(connId uint32, msg *network.MsgPacket) {
 
 	// protobufmessage
 	protoMsg := route.PmsgFunc() // 传递函数比传递一块内存节省空间
+
+	head := &pb.RpcHead{}
+	head.SrcServerID = SERVER.GetID()
+	head.ConnID = connId
+	head.ID = p.GetID()
+
 	_ = proto.Unmarshal(msg.MsgBody, protoMsg)
 
 	// 接续函数
 	// "gateserver<-ClientSession.HandleTest"
 	funcName := route.FuncName
-	strs := strings.Split(funcName, "<-")
-	head := &pb.RpcHead{}
-	if len(strs) == 2 {
-		switch strs[0] {
-		case "gateserver":
-			head.DestServerType = network.Send_Gate
-		case "gameserver":
-			head.DestServerType = network.Send_Game
-		case "loginserver":
-			head.DestServerType = network.Send_Login
-		}
 
-		funcName = strs[1]
-	}
-
-	// 拆分类名和函数名
-	strs = strings.Split(funcName, ".")
-	if len(strs) == 2 {
-		head.ClassName = strs[0] // 类名
-		funcName = strs[1]       // 真正的函数名字
-	}
-
-	head.SrcServerID = SERVER.GetID()
-	head.FuncName = funcName
-	head.ConnID = connId
-	head.ID = p.GetID()
-
-	rpcPacket := pb.RpcPacket{}
-	rpcPacket.Head = head
-
-	buf := bytes.NewBuffer([]byte{})
-	enc := gob.NewEncoder(buf)
-	enc.Encode(protoMsg)
-	rpcPacket.Buff = buf.Bytes()
+	rpcPacket := pb.Marshal(head, &funcName, protoMsg)
 
 	if head.DestServerType == network.Send_Game {
 		//
+
 	} else if head.DestServerType == network.Send_Gate {
 		// 加入是本地的话调用本地的方法
 		// 我们需要根据类名 函数名 找到方法然后调用
@@ -152,18 +127,34 @@ func (p *ClientSession) HandlePacket(connId uint32, msg *network.MsgPacket) {
 	} else if head.DestServerType == network.Send_Login {
 
 	}
-
 }
 
-func (p *ClientSession) HandleTest(test *pb.Test) {
+func (p *ClientSession) HandleTest(ctx context.Context, test *pb.Test) {
+	//TODO
+	head := ctx.Value("rpcHead").(pb.RpcHead)
+	// 转发到gameserver
+	// 需要知道发送到那个服务器
+
+	funcName := "AccountMgr.LoginAccountRequest"
+
+	rpcPacket := pb.Marshal(&head, &funcName, test)
+	rpcPacketData, _ := proto.Marshal(&rpcPacket)
+	packet := pb.Packet{
+		Id:   head.ConnID,
+		Buff: rpcPacketData, // RpcPacket 包含头和参数数据
+	}
+
+	p.SendToGameServer(funcName, head, packet)
+
 	log.Printf("接收测试数据 Name: %s, Password: %s\n", test.Name, test.PassWord)
 }
 
 func (p *ClientSession) HandleAuth(connId uint32, msg *network.MsgPacket) bool {
+
 	return true
 }
 
-func (p *ClientSession) HandleDisconnect(dis *pb.Disconnect) {
+func (p *ClientSession) HandleDisconnect(ctx context.Context, dis *pb.Disconnect) {
 	log.Printf("客户端断开连接:%d\n", dis.ConnId)
 
 	GSessionMgr.DelSession(p.GetID())

@@ -2,6 +2,7 @@ package entity
 
 import (
 	"bytes"
+	"context"
 	"encoding/gob"
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
@@ -108,6 +109,10 @@ func (e *Entity) Call(packet pb.RpcPacket) {
 		if i == 0 {
 			ps[i] = e.rVal
 			continue
+		}
+
+		if i == 1 {
+			ps[i] = reflect.ValueOf(context.WithValue(context.Background(), "rpcHead", *(*pb.RpcHead)(packet.Head)))
 		}
 		// 获取每个参数的类型
 		paramsValue := reflect.New(v.Type.In(i))

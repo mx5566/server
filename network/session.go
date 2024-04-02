@@ -106,16 +106,3 @@ func (s *Session) Update() {
 		}
 	}
 }
-
-var MSGHANDLEMGR MsgHandleMgr
-
-type MsgHandleMgr struct {
-}
-
-func (s *MsgHandleMgr) AddHandle(handle *Session) {
-
-}
-
-func (s *MsgHandleMgr) Update() {
-
-}
