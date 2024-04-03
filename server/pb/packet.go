@@ -5,10 +5,11 @@ import (
 	"encoding/gob"
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/network"
+	"github.com/mx5566/server/rpc"
 	"strings"
 )
 
-func Route(head *RpcHead, funcName string) string {
+func Route(head *rpc.RpcHead, funcName string) string {
 	strs := strings.Split(funcName, "<-")
 	if len(strs) == 2 {
 		switch strings.ToLower(strs[0]) {
@@ -31,7 +32,7 @@ func Route(head *RpcHead, funcName string) string {
 	return funcName
 }
 
-func Marshal(head *RpcHead, funcName *string, params ...interface{}) RpcPacket {
+func Marshal(head *rpc.RpcHead, funcName *string, params ...interface{}) rpc.RpcPacket {
 	defer func() {
 		if err := recover(); err != nil {
 			base.TraceCode(err)
@@ -42,7 +43,7 @@ func Marshal(head *RpcHead, funcName *string, params ...interface{}) RpcPacket {
 	// gameserver<-playermgr.Login
 	*funcName = Route(head, *funcName)
 
-	pac := RpcPacket{}
+	pac := rpc.RpcPacket{}
 
 	buf := bytes.NewBuffer([]byte{})
 	enc := gob.NewEncoder(buf)

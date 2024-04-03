@@ -7,6 +7,7 @@ import (
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/entity"
 	"github.com/mx5566/server/network"
+	"github.com/mx5566/server/rpc"
 	"github.com/mx5566/server/server/pb"
 	"hash/crc32"
 	"log"
@@ -26,7 +27,7 @@ func NewSession() network.ISession {
 	return s
 }
 
-func (p *ClientSession) SendToGameServer(funcName string, head pb.RpcHead, packet pb.Packet) {
+func (p *ClientSession) SendToGameServer(funcName string, head rpc.RpcHead, packet rpc.Packet) {
 	head.DestServerType = network.Send_Game
 
 }
@@ -103,7 +104,7 @@ func (p *ClientSession) HandlePacket(connId uint32, msg *network.MsgPacket) {
 	// protobufmessage
 	protoMsg := route.PmsgFunc() // 传递函数比传递一块内存节省空间
 
-	head := &pb.RpcHead{}
+	head := &rpc.RpcHead{}
 	head.SrcServerID = SERVER.GetID()
 	head.ConnID = connId
 	head.ID = p.GetID()
@@ -131,7 +132,7 @@ func (p *ClientSession) HandlePacket(connId uint32, msg *network.MsgPacket) {
 
 func (p *ClientSession) HandleTest(ctx context.Context, test *pb.Test) {
 	//TODO
-	head := ctx.Value("rpcHead").(pb.RpcHead)
+	head := ctx.Value("rpcHead").(rpc.RpcHead)
 	// 转发到gameserver
 	// 需要知道发送到那个服务器
 
@@ -139,7 +140,7 @@ func (p *ClientSession) HandleTest(ctx context.Context, test *pb.Test) {
 
 	rpcPacket := pb.Marshal(&head, &funcName, test)
 	rpcPacketData, _ := proto.Marshal(&rpcPacket)
-	packet := pb.Packet{
+	packet := rpc.Packet{
 		Id:   head.ConnID,
 		Buff: rpcPacketData, // RpcPacket 包含头和参数数据
 	}

@@ -3,7 +3,7 @@ package entity
 import (
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
-	"github.com/mx5566/server/server/pb"
+	"github.com/mx5566/server/rpc"
 )
 
 var GEntityMgr = CreateEntityMgr()
@@ -71,7 +71,7 @@ func (m *EntityMgr) RegisterEntity(entity IEntity, params ...OpOption) {
 	entity.SetEntityType(op.entityType)
 }
 
-func (m *EntityMgr) Call(packet pb.RpcPacket) {
+func (m *EntityMgr) Call(packet rpc.RpcPacket) {
 	className := packet.Head.ClassName
 	funcName := packet.Head.FuncName
 	if v, ok := m.Entitys[className]; ok && v != nil {

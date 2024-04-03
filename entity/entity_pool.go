@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/mx5566/server/server/pb"
+	"github.com/mx5566/server/rpc"
 	"reflect"
 	"sync"
 )
@@ -13,7 +13,7 @@ type IEntityPool interface {
 	AddEntity(entity IEntity)
 	DelEntity(ID int64)
 	GetEntity(ID int64) IEntity
-	CallEntity(packet pb.RpcPacket)
+	CallEntity(packet rpc.RpcPacket)
 }
 
 type EntityPool struct {
@@ -52,7 +52,7 @@ func (p *EntityPool) GetEntity(ID int64) IEntity {
 	return nil
 }
 
-func (p *EntityPool) CallEntity(packet pb.RpcPacket) {
+func (p *EntityPool) CallEntity(packet rpc.RpcPacket) {
 	ent := p.GetEntity(packet.Head.ID)
 	if ent != nil {
 		ent.Call(packet)

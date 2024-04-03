@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package=".;pb";
+option go_package=".;rpc";
 
 message RpcHead {
     string ClassName =1;    // 哪个类里面的函数
@@ -21,5 +21,17 @@ message Packet {
     bytes buff = 2;
 }
 
+// 集群服务器的类型
+enum ServiceType {
+    None = 0;
+    GateServer = 1;
+    GameServer = 2;
+    LoginServer = 3;
+};
 
+message ClusterInfo {
+    string Ip = 1;
+    uint32 Port = 2;
+    ServiceType serviceType = 3;
+}
 
