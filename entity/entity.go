@@ -6,7 +6,8 @@ import (
 	"encoding/gob"
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
-	"github.com/mx5566/server/server/pb"
+	"github.com/mx5566/server/base/mpsc"
+	"github.com/mx5566/server/rpc3"
 	"reflect"
 	"sync/atomic"
 )
@@ -22,16 +23,19 @@ const (
 
 type IEntity interface {
 	Init()
+	Start()
+	Run()
 	GetID() int64
 	SetID(int64)
 	IsExistMethod(funcName string) bool
-	Call(pb.RpcPacket)
+	Call(rpc3.RpcPacket)
 	Update()
 	Register(entity IEntity)
 	GetEntityType() EntityType
 	GetEntityPool() IEntityPool
 	SetEntityPool(pool IEntityPool)
 	SetEntityType(EntityType)
+	Send(packet rpc3.RpcPacket)
 }
 
 type Entity struct {
@@ -41,12 +45,41 @@ type Entity struct {
 	rVal       reflect.Value
 	pool       IEntityPool
 	entityType EntityType
+	mailBox    *mpsc.Queue[*rpc3.RpcPacket]
+	mailChan   chan bool
 }
 
 func (e *Entity) Init() {
 	if e.ID == 0 {
 		e.ID = atomic.AddInt64(&gEntityID, 1)
 	}
+
+	e.mailBox = mpsc.New[*rpc3.RpcPacket]()
+	e.mailChan = make(chan bool)
+}
+
+func (e *Entity) Start() {
+
+	go e.Run()
+}
+
+func (e *Entity) Run() {
+	for {
+		switch {
+		case <-e.mailChan:
+			for data := e.mailBox.Pop(); data != nil; data = e.mailBox.Pop() {
+				e.Call(*data)
+			}
+		}
+	}
+}
+
+func (e *Entity) Send(packet rpc3.RpcPacket) {
+	e.mailBox.Push(&packet)
+
+	//logm.DebugfE("EntityCallFunName:%s", packet.Head.FuncName)
+
+	e.mailChan <- true
 }
 
 func (e *Entity) SetID(iD int64) {
@@ -84,7 +117,7 @@ func (e *Entity) IsExistMethod(funcName string) bool {
 	return is
 }
 
-func (e *Entity) Call(packet pb.RpcPacket) {
+func (e *Entity) Call(packet rpc3.RpcPacket) {
 	defer func() {
 		if err := recover(); err != nil {
 			base.TraceCode(err)
@@ -112,23 +145,26 @@ func (e *Entity) Call(packet pb.RpcPacket) {
 		}
 
 		if i == 1 {
-			ps[i] = reflect.ValueOf(context.WithValue(context.Background(), "rpcHead", *(*pb.RpcHead)(packet.Head)))
+			ps[i] = reflect.ValueOf(context.WithValue(context.Background(), "rpcHead", *(*rpc3.RpcHead)(packet.Head)))
+			continue
 		}
 		// 获取每个参数的类型
 		paramsValue := reflect.New(v.Type.In(i))
 
-		dec.DecodeValue(paramsValue)
+		err := dec.DecodeValue(paramsValue)
+		if err != nil {
+			logm.ErrorfE("解析数据错误: %s", err.Error())
+			continue
+		}
 
 		ps[i] = paramsValue.Elem()
 	}
+
+	//logm.DebugfE("Call:%s", packet.Head.FuncName)
 
 	rets := v.Func.Call(ps)
 	length := len(rets)
 	for i := 0; i < length; i++ {
 		logm.DebugfE("函数:%s 返回值: %v \n", rets[i])
 	}
-}
-
-func (e *Entity) Update() {
-
 }

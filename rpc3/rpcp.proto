@@ -1,0 +1,55 @@
+syntax = "proto3";
+option go_package=".;rpc3";
+
+message RpcHead {
+    string ClassName =1;    // 哪个类里面的函数
+    string FuncName = 2;    // 函数名、
+    uint32 SrcServerID =3;  //来自与那个服务器ID
+    uint32 DestServerID = 4; // 目的服务器的ID
+    ServiceType DestServerType = 5;
+    int64 ID = 6;   //
+    uint32 ConnID = 7;
+    SendType MsgSendType = 8;
+}
+
+message RpcPacket {
+    RpcHead head = 1;   // 头
+    bytes buff =2;      // 所有的参数的二进制序列话数据
+}
+
+message Packet {
+    uint32 Id = 1;
+    bytes buff = 2;
+}
+
+// 集群服务器的类型
+enum ServiceType {
+    None = 0;
+    GateServer = 1;
+    GameServer = 2;
+    LoginServer = 3;
+    WorldServer = 4;
+};
+
+message ClusterInfo {
+    string Ip = 1;
+    uint32 Port = 2;
+    ServiceType serviceType = 3;
+}
+
+
+message EtcdConfig {
+    repeated  string endPoints = 1;  // etcd 的服务器地址
+    int64 timeNum = 2;   // 租约的租期
+};
+
+message NatsConfig {
+    repeated string endPoints = 1;
+}
+
+
+enum SendType {
+    SendType_Single = 0;
+    SendType_BroadCast = 1;
+    SendType_Local = 2;
+}

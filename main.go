@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/mx5566/server/network"
+	"github.com/mx5566/server/server/gameserver"
 	"github.com/mx5566/server/server/gateserver"
+	"github.com/mx5566/server/server/worldserver"
 	"os"
 	"os/signal"
 	"syscall"
@@ -49,8 +51,12 @@ func main() {
 		// init
 		gateserver.SERVER.Init()
 
-		//loop
-		gateserver.SERVER.Loop()
+	} else if args[1] == "game" {
+		gameserver.SERVER.Init()
+
+	} else if args[1] == "world" {
+		worldserver.SERVER.Init()
+
 	}
 	/*
 		s := new(network.ServerSocket)

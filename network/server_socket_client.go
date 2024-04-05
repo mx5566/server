@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/mx5566/server/base"
+	"github.com/mx5566/server/rpc3"
 	"github.com/mx5566/server/server/pb"
 	"hash/crc32"
 	"io"
@@ -22,12 +23,12 @@ type ServerSocketClient struct {
 func (s *ServerSocketClient) Init(ip string, port uint16) bool {
 	s.Socket.Init(ip, port)
 
-	factory := GSessionFactoryMgr.GetFactory(int(s.GetSessionType()))
+	//factory := GSessionFactoryMgr.GetFactory(int(s.GetSessionType()))
 
-	s.session = factory.CreateSession()
-	s.session.SetSocket(s)
-	s.session.SetFactory(factory)
-	s.session.Init()
+	//s.session = factory.CreateSession()
+	//s.session.SetSocket(s)
+	//s.session.SetFactory(factory)
+	//s.session.Init()
 
 	return true
 }
@@ -95,11 +96,19 @@ func (s *ServerSocketClient) OnNetFail() {
 	msg.MsgId = crc32.ChecksumIEEE([]byte("Disconnect"))
 	dis := &pb.Disconnect{}
 	dis.ConnId = s.connId
-
 	data, _ := proto.Marshal(dis)
 	msg.MsgBody = data
 
-	s.session.AddQueue(msg)
+	var dataPack DataPacket
+	dataPack.Encode(msg)
+	packet := rpc3.Packet{
+		Id:   s.connId,
+		Buff: dataPack.Encode(msg),
+	}
+
+	s.handleFunc(packet)
+
+	//s.session.AddQueue(msg)
 
 	// 底层网路删除
 	s.Stop()

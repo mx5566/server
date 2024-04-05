@@ -3,22 +3,22 @@ package pb
 import (
 	"bytes"
 	"encoding/gob"
+	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
-	"github.com/mx5566/server/network"
-	"github.com/mx5566/server/rpc"
+	"github.com/mx5566/server/rpc3"
 	"strings"
 )
 
-func Route(head *rpc.RpcHead, funcName string) string {
+func Route(head *rpc3.RpcHead, funcName string) string {
 	strs := strings.Split(funcName, "<-")
 	if len(strs) == 2 {
 		switch strings.ToLower(strs[0]) {
 		case "gateserver":
-			head.DestServerType = network.Send_Gate
+			head.DestServerType = rpc3.ServiceType_GateServer
 		case "gameserver":
-			head.DestServerType = network.Send_Game
+			head.DestServerType = rpc3.ServiceType_GameServer
 		case "loginserver":
-			head.DestServerType = network.Send_Login
+			head.DestServerType = rpc3.ServiceType_LoginServer
 		}
 		funcName = strs[1]
 	}
@@ -29,10 +29,10 @@ func Route(head *rpc.RpcHead, funcName string) string {
 		head.FuncName = strs[1]
 	}
 
-	return funcName
+	return head.FuncName
 }
 
-func Marshal(head *rpc.RpcHead, funcName *string, params ...interface{}) rpc.RpcPacket {
+func Marshal(head *rpc3.RpcHead, funcName *string, params ...interface{}) rpc3.RpcPacket {
 	defer func() {
 		if err := recover(); err != nil {
 			base.TraceCode(err)
@@ -43,13 +43,18 @@ func Marshal(head *rpc.RpcHead, funcName *string, params ...interface{}) rpc.Rpc
 	// gameserver<-playermgr.Login
 	*funcName = Route(head, *funcName)
 
-	pac := rpc.RpcPacket{}
+	pac := rpc3.RpcPacket{}
 
 	buf := bytes.NewBuffer([]byte{})
 	enc := gob.NewEncoder(buf)
 	length := len(params)
 	for i := 0; i < length; i++ {
-		enc.Encode(params[i])
+		err := enc.Encode(params[i])
+		if err != nil {
+			logm.ErrorfE("gob 编码错误 那么：%s, err: %s", *funcName, err.Error())
+		} else {
+			//logm.DebugfE("编码成功")
+		}
 	}
 	pac.Head = head
 	pac.Buff = buf.Bytes()

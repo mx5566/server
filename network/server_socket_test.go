@@ -45,8 +45,8 @@ func TestServerSocket(t *testing.T) {
 	s.Init("0.0.0.0", 8080)
 	s.Start()
 
-	s.BindPacketFunc(1001, handleLogin)
-	s.BindPacketFunc(1, handleClientLost)
+	//s.BindPacketFunc(1001, handleLogin)
+	//s.BindPacketFunc(1, handleClientLost)
 
 	SERVER.server = s
 	SERVER.playMgr = new(PlayerMgr)

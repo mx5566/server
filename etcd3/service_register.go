@@ -5,31 +5,30 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mx5566/logm"
-	"github.com/mx5566/server/rpc"
-	"go.etcd.io/etcd/clientv3"
+	"github.com/mx5566/server/base"
+	"github.com/mx5566/server/rpc3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
 )
 
 // 服务注册模块
 type ServiceRegister struct {
-	client        *clientv3.Client
-	lease         clientv3.Lease
-	info          *rpc.ClusterInfo
-	leaseID       clientv3.LeaseID
-	timeGrant     int64
-	status        int // 0  1
-	keepAliveChan <-chan *clientv3.LeaseKeepAliveResponse
-	cancelFunc    func()
+	client    *clientv3.Client
+	lease     clientv3.Lease
+	info      *rpc3.ClusterInfo
+	leaseID   clientv3.LeaseID
+	timeGrant int64
+	status    int // 0  1
 }
 
-func NewServiceRegister(endPoints []string, timeNum int64) *ServiceRegister {
+func NewServiceRegister(clusterInfo *rpc3.ClusterInfo, config rpc3.EtcdConfig) *ServiceRegister {
 	s := &ServiceRegister{}
-	s.Init(endPoints, timeNum)
+	s.Init(clusterInfo, config.GetEndPoints(), config.GetTimeNum())
 
 	return s
 }
 
-func (r *ServiceRegister) Init(endPoints []string, timeNum int64) {
+func (r *ServiceRegister) Init(clusterInfo *rpc3.ClusterInfo, endPoints []string, timeNum int64) {
 	conf := clientv3.Config{
 		Endpoints:   endPoints,
 		DialTimeout: 5 * time.Second,
@@ -41,14 +40,13 @@ func (r *ServiceRegister) Init(endPoints []string, timeNum int64) {
 		return
 	}
 
-	lease := clientv3.NewLease(r.client)
+	lease := clientv3.NewLease(client)
 
 	r.client = client
 	r.lease = lease
 	r.timeGrant = timeNum
 	r.status = 0
-
-	r.SetLease()
+	r.info = clusterInfo
 
 	go r.Run()
 }
@@ -58,49 +56,50 @@ func (r *ServiceRegister) SetLease() {
 	//设置租约时间
 	leaseResp, err := r.lease.Grant(context.Background(), r.timeGrant)
 	if err != nil {
+		logm.ErrorfE("设置租约时间错误: %s\n", err.Error())
 		return
 	}
 
 	r.leaseID = leaseResp.ID
 
-	key := ServiceName + string(r.info.ServiceType) + "/" + fmt.Sprintf("%s:%d", r.info.Ip, r.info.Port)
+	key := base.ServiceName + r.info.ServiceType.String() + "/" + fmt.Sprintf("%s:%d", r.info.Ip, r.info.Port)
 	val, _ := json.Marshal(r.info)
 	_, err = r.client.Put(context.Background(), key, string(val), clientv3.WithLease(r.leaseID))
 	if err != nil {
-		logm.PanicfE("etcd lease Put error: %s \n", err.Error())
+		logm.ErrorfE("etcd lease Put error: %s \n", err.Error())
 		return
 	}
 
-	ctx, cancelFunc := context.WithCancel(context.TODO())
-	r.keepAliveChan, err = r.lease.KeepAlive(ctx, r.leaseID)
+	// 进入续约状态
+	r.status = 1
+
+	//logm.DebugfE("设置lease 成功\n")
+}
+
+func (r *ServiceRegister) KeepAlive() {
+	_, err := r.lease.KeepAliveOnce(context.Background(), r.leaseID)
 	if err != nil {
-		logm.ErrorfE("etcd lease KeepAlive error: %s \n", err.Error())
+		r.status = 0
+		logm.ErrorfE("etcd lease KeepAliveOnce error: %s \n", err.Error())
 		return
 	}
 
-	r.cancelFunc = cancelFunc
+	//logm.DebugfE("续租keepalive成功\n")
+
+	// 避免cpu忙
+	time.Sleep(3 * time.Second)
 }
 
 // 监听 续租情况
 func (r *ServiceRegister) Run() {
 	for {
-		select {
-		case leaseKeepResp := <-r.keepAliveChan:
-			if leaseKeepResp == nil {
-				logm.InfofE("已经关闭续租功能\n")
-				return
-			} else {
-				logm.InfofE("续租成功\n")
-			}
+		switch r.status {
+		// 初始状态
+		case 0:
+			r.SetLease()
+		// 续约
+		case 1:
+			r.KeepAlive()
 		}
 	}
-}
-
-func (r *ServiceRegister) RevokeLease() {
-	var err error
-	go func(err error) {
-		r.cancelFunc()
-		time.Sleep(2 * time.Second)
-		_, err = r.lease.Revoke(context.TODO(), r.leaseID)
-	}(err)
 }

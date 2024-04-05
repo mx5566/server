@@ -2,8 +2,9 @@ package gateserver
 
 import (
 	"github.com/mx5566/logm"
+	"github.com/mx5566/server/cluster"
 	"github.com/mx5566/server/network"
-	"time"
+	"github.com/mx5566/server/rpc3"
 )
 
 type GateServer struct {
@@ -16,33 +17,26 @@ func (gs *GateServer) Init() {
 	logm.Init("gateserver", map[string]string{"errFile": "gate_server.log", "logFile": "gate_server_error.log"}, "debug")
 	s := new(network.ServerSocket)
 	s.Init("0.0.0.0", 8080)
-	s.SetSessionType(network.SESSION_CLIENT)
+
+	session := new(ClientSession)
+	session.Init()
+
+	s.BindPacketFunc(session.HandlePacket)
 	s.Start()
 
-	//s.BindPacketFunc()
-	// 逻辑管理器的初始化
-	gs.InitMgr()
-
-}
-
-func (gs *GateServer) InitMgr() {
-	gs.InitFactory()
-}
-
-func (gs *GateServer) InitFactory() {
-	network.GSessionFactoryMgr.AddFactory(new(ClientSessionFactory))
-}
-
-func (gs *GateServer) Loop() {
-	for {
-		GSessionMgr.Update()
-		// 暂停20微淼
-		time.Sleep(20 * time.Millisecond)
-	}
-
+	cluster.GCluster.InitCluster(&rpc3.ClusterInfo{
+		Ip:          "0.0.0.0",
+		Port:        8080,
+		ServiceType: rpc3.ServiceType_GateServer,
+	}, rpc3.EtcdConfig{
+		EndPoints: []string{"127.0.0.1:2379"},
+		TimeNum:   10,
+	}, rpc3.NatsConfig{
+		EndPoints: []string{"127.0.0.1:4222"},
+	})
 }
 
 // 可以用IP+PORT 求一个哈希值
 func (gs *GateServer) GetID() uint32 {
-	return 1
+	return cluster.GCluster.ClusterInfo.Id()
 }

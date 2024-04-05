@@ -9,6 +9,14 @@ import (
 	"strings"
 )
 
+const (
+	Send_Game = iota
+	Send_Gate
+	Send_Login
+)
+
+const ServiceName = "Server/"
+
 // 输出错误，跟踪代码
 func TraceCode(code ...interface{}) {
 	var buf [4096]byte

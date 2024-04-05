@@ -1,0 +1,3 @@
+.\server.exe "gate"
+
+pause

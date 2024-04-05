@@ -6,12 +6,6 @@ import (
 	"github.com/mx5566/server/base"
 )
 
-const (
-	Send_Game = iota
-	Send_Gate
-	Send_Login
-)
-
 type HandleRegister struct {
 	Status uint16 // 转发到哪个服务器
 	Handle HandleFunc
@@ -85,7 +79,7 @@ func (s *Session) HandlePacket(connId uint32, msg *MsgPacket) {
 	}
 
 	if _, ok := s.packetHandles[msg.MsgId]; ok {
-		s.packetHandles[msg.MsgId](connId, msg)
+		//s.packetHandles[msg.MsgId](connId, msg)
 	}
 
 }

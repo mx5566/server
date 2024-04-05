@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/mx5566/server/base"
+	"github.com/mx5566/server/rpc3"
 	"log"
 	"net"
 )
@@ -11,16 +12,16 @@ import (
 const TcpHeadSize = 6
 const TcpIDLength = 4
 
-type HandleFunc func(uint32, *MsgPacket) bool //回调函数
+type HandleFunc func(packet rpc3.Packet) //回调函数
 
 type ISocket interface {
 	Init(ip string, port uint16) bool
 	Start() bool
 	Stop() bool
 	Run() bool
-	HandlePacket(uint32, *MsgPacket)
+	HandlePacket(rpc3.Packet)
 	ReceivePacket([]byte) bool
-	BindPacketFunc(uint32, HandleFunc)
+	BindPacketFunc(HandleFunc)
 	Connect() bool
 	OnNetFail()
 	Send([]byte)
@@ -38,6 +39,7 @@ type Socket struct {
 	connId           uint32
 	session          ISession
 	sessionType      SESSION_TYPE
+	handleFunc       HandleFunc
 }
 
 func (s *Socket) GetConnId() uint32 {
@@ -100,12 +102,12 @@ func (s *Socket) Run() bool {
 	return true
 }
 
-func (s *Socket) BindPacketFunc(msgId uint32, handle HandleFunc) {
-	//s.msgHandle.BindPacketFunc(msgId, handle)
+func (s *Socket) BindPacketFunc(hFunc HandleFunc) {
+	s.handleFunc = hFunc
 }
 
-func (s *Socket) HandlePacket(connId uint32, msg *MsgPacket) {
-
+func (s *Socket) HandlePacket(packet rpc3.Packet) {
+	s.HandlePacket(packet)
 }
 
 func (s *Socket) ReceivePacket(data []byte) bool {
@@ -138,12 +140,17 @@ func (s *Socket) ReceivePacket(data []byte) bool {
 			s.nReceBuff = buff[curSize:]
 			return true
 		} else {
-			// 二进制解包
-			var dp DataPacket
-			msg := dp.Decode(buff[curSize : uint16(curSize)+TcpHeadSize+msgLen])
+			packet := rpc3.Packet{
+				Id:   s.connId,
+				Buff: buff[curSize : uint16(curSize)+TcpHeadSize+msgLen],
+			}
+			s.handleFunc(packet)
 
+			// 二进制解包
+			//var dp DataPacket
+			//msg := dp.Decode(buff[curSize : uint16(curSize)+TcpHeadSize+msgLen])
 			// 放到消息队列里面
-			s.session.AddQueue(msg)
+			//s.session.AddQueue(msg)
 			curSize += int(TcpHeadSize + msgLen)
 		}
 	}

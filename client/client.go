@@ -7,7 +7,6 @@ import (
 	"github.com/mx5566/server/network"
 	"github.com/mx5566/server/server/pb"
 	"hash/crc32"
-	"strconv"
 	"time"
 )
 
@@ -20,16 +19,16 @@ func main() {
 	//var id int64 = 0
 
 	clients := make(map[int]network.ISocket)
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 1; i++ {
 		client := new(network.ClientSocket)
 		client.Init("127.0.0.1", 8080)
 		client.Start()
 		clients[i] = client
 		//client.GetConnId()
 		//ii := atomic.AddInt64(&id, 1)
-		data := pb.Test{
-			Name:     "mengxiang" + strconv.Itoa(i),
-			PassWord: "990000",
+		data := pb.LoginAccountReq{
+			UserName: "mengxiang",
+			Password: "9090",
 		}
 
 		serData, _ := proto.Marshal(&data)

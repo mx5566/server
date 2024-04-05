@@ -59,7 +59,8 @@ func (s *ServerSocket) DelConn(ConnId uint32) {
 
 func (s *ServerSocket) AddConn(conn *net.TCPConn) {
 	ssc := new(ServerSocketClient)
-	ssc.SetSessionType(s.GetSessionType())
+	//ssc.SetSessionType(s.GetSessionType())
+	ssc.BindPacketFunc(s.handleFunc)
 
 	barray := strings.Split(conn.RemoteAddr().String(), ":")
 	ret, _ := strconv.Atoi(barray[1])

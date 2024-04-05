@@ -12,6 +12,11 @@ message RegisterAccountReq {
 	string Password = 2;
 }
 
+message LoginAccountReq {
+  string UserName = 1;
+  string Password = 2;
+}
+
 message Test {
   string Name = 1;
   string PassWord =2;
