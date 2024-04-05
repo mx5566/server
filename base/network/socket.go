@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/mx5566/server/base"
-	"github.com/mx5566/server/rpc3"
+	"github.com/mx5566/server/base/rpc3"
 	"log"
 	"net"
 )

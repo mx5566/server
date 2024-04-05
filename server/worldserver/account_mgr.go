@@ -3,7 +3,7 @@ package worldserver
 import (
 	"context"
 	"github.com/mx5566/logm"
-	"github.com/mx5566/server/entity"
+	"github.com/mx5566/server/base/entity"
 	"github.com/mx5566/server/server/pb"
 )
 

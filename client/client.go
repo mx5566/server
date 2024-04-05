@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/mx5566/server/base"
-	"github.com/mx5566/server/network"
+	"github.com/mx5566/server/base/network"
 	"github.com/mx5566/server/server/pb"
 	"hash/crc32"
 	"time"

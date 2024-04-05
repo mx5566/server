@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/mx5566/server/network"
+	"github.com/mx5566/server/base/network"
 	"github.com/mx5566/server/server/gameserver"
 	"github.com/mx5566/server/server/gateserver"
 	"github.com/mx5566/server/server/worldserver"

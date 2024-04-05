@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/mx5566/server/rpc3"
+	"github.com/mx5566/server/base/rpc3"
 	"reflect"
 	"sync"
 )

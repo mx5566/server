@@ -7,7 +7,7 @@ import (
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/base/mpsc"
-	"github.com/mx5566/server/rpc3"
+	"github.com/mx5566/server/base/rpc3"
 	"reflect"
 	"sync/atomic"
 )

@@ -2,10 +2,10 @@ package worldserver
 
 import (
 	"github.com/mx5566/logm"
-	"github.com/mx5566/server/cluster"
-	"github.com/mx5566/server/entity"
-	"github.com/mx5566/server/network"
-	"github.com/mx5566/server/rpc3"
+	"github.com/mx5566/server/base/cluster"
+	"github.com/mx5566/server/base/entity"
+	"github.com/mx5566/server/base/network"
+	"github.com/mx5566/server/base/rpc3"
 )
 
 type WorldServer struct {
