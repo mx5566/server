@@ -58,9 +58,3 @@ func (p *EntityPool) CallEntity(packet rpc3.RpcPacket) {
 		ent.Call(packet)
 	}
 }
-
-func (p *EntityPool) Update() {
-	for _, v := range p.entityMap {
-		v.Update()
-	}
-}

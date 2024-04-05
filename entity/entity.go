@@ -29,7 +29,6 @@ type IEntity interface {
 	SetID(int64)
 	IsExistMethod(funcName string) bool
 	Call(rpc3.RpcPacket)
-	Update()
 	Register(entity IEntity)
 	GetEntityType() EntityType
 	GetEntityPool() IEntityPool

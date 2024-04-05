@@ -30,7 +30,6 @@ type ClientSession struct {
 
 func NewSession() *ClientSession {
 	s := &ClientSession{}
-	//s.Init()
 	return s
 }
 
@@ -46,23 +45,6 @@ func (p *ClientSession) SendToWorldServer(funcName string, head rpc3.RpcHead, pa
 	head.MsgSendType = rpc3.SendType_SendType_Single
 
 	cluster.GCluster.SendMsg(head, packet)
-}
-
-func (p *ClientSession) Update() {
-	/*socket := p.GetSocket()
-	if socket == nil {
-		return
-	}
-
-	if p.Session.DealQueue.IsEmpty() && !p.ReceQueue.IsEmpty() {
-		p.DealQueue.Copy(p.ReceQueue)
-	}
-
-	if !p.DealQueue.IsEmpty() {
-		for data := p.DealQueue.Pop(); data != nil; data = p.DealQueue.Pop() {
-			p.HandlePacket(socket.GetConnId(), data)
-		}
-	}*/
 }
 
 func (p *ClientSession) Init() {
