@@ -33,3 +33,8 @@ func (gs *WorldServer) Init() {
 
 	cluster.GCluster.BindPacketFunc(entity.GEntityMgr.PacketFunc)
 }
+
+// 可以用IP+PORT 求一个哈希值
+func (gs *WorldServer) GetID() uint32 {
+	return cluster.GCluster.ClusterInfo.Id()
+}

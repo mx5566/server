@@ -10,6 +10,7 @@ import (
 	"github.com/mx5566/server/base/etcd3"
 	"github.com/mx5566/server/base/network"
 	"github.com/mx5566/server/base/rpc3"
+	"github.com/mx5566/server/server/pb"
 	"github.com/nats-io/nats.go"
 	"hash/crc32"
 	"strings"
@@ -33,10 +34,12 @@ type Cluster struct {
 	handleFunc network.HandleFunc
 }
 
-func (c *Cluster) SendMsg(head rpc3.RpcHead, packet rpc3.RpcPacket) {
+func (c *Cluster) SendMsg(head *rpc3.RpcHead, funcName string, param ...interface{}) {
+	rpcPacket := pb.Marshal(head, &funcName, param)
+
 	switch head.MsgSendType {
 	case rpc3.SendType_SendType_Local:
-		entity.GEntityMgr.Send(packet)
+		entity.GEntityMgr.Send(rpcPacket)
 	case rpc3.SendType_SendType_Single:
 		if head.DestServerType == rpc3.ServiceType_WorldServer {
 			// 有多个worldserver 发送那个呢
@@ -46,10 +49,8 @@ func (c *Cluster) SendMsg(head rpc3.RpcHead, packet rpc3.RpcPacket) {
 			top := fmt.Sprintf("%s%s/%d", base.ServiceName, head.DestServerType.String(), clusterID.Id())
 
 			head.DestServerID = clusterID.Id()
-			packet.Head = &head
 
-			buff, _ := proto.Marshal(&packet)
-
+			buff, _ := proto.Marshal(&rpcPacket)
 			_ = c.natsClient.Publish(top, buff)
 
 			logm.ErrorfE("发送数据到worlsserv: %s", top)
@@ -60,7 +61,7 @@ func (c *Cluster) SendMsg(head rpc3.RpcHead, packet rpc3.RpcPacket) {
 
 		}
 	case rpc3.SendType_SendType_BroadCast:
-		buff, _ := proto.Marshal(&packet)
+		buff, _ := proto.Marshal(&rpcPacket)
 		c.natsClient.Publish(fmt.Sprintf("%s%s", base.ServiceName, head.DestServerType.String()), buff)
 	}
 

@@ -33,18 +33,18 @@ func NewSession() *ClientSession {
 	return s
 }
 
-func (p *ClientSession) SendToGameServer(funcName string, head rpc3.RpcHead, packet rpc3.RpcPacket) {
+func (p *ClientSession) SendToGameServer(head *rpc3.RpcHead, funcName string, param ...interface{}) {
 	head.DestServerType = rpc3.ServiceType_GameServer
 	head.MsgSendType = rpc3.SendType_SendType_Single
 
-	cluster.GCluster.SendMsg(head, packet)
+	cluster.GCluster.SendMsg(head, funcName, param)
 }
 
-func (p *ClientSession) SendToWorldServer(funcName string, head rpc3.RpcHead, packet rpc3.RpcPacket) {
+func (p *ClientSession) SendToWorldServer(head *rpc3.RpcHead, funcName string, param ...interface{}) {
 	head.DestServerType = rpc3.ServiceType_WorldServer
 	head.MsgSendType = rpc3.SendType_SendType_Single
 
-	cluster.GCluster.SendMsg(head, packet)
+	cluster.GCluster.SendMsg(head, funcName, param)
 }
 
 func (p *ClientSession) Init() {
@@ -111,18 +111,20 @@ func (p *ClientSession) HandlePacket(packet rpc3.Packet) {
 	// "gateserver<-ClientSession.HandleTest"
 	funcName := route.FuncName
 
-	rpcPacket := pb.Marshal(head, &funcName, protoMsg)
+	//rpcPacket := pb.Marshal(head, &funcName, protoMsg)
 
 	if head.DestServerType == rpc3.ServiceType_GameServer {
 		//
-		p.SendToGameServer(funcName, *head, rpcPacket)
+		p.SendToGameServer(head, funcName, protoMsg)
 	} else if head.DestServerType == rpc3.ServiceType_GateServer {
 		// 加入是本地的话调用本地的方法
 		// 我们需要根据类名 函数名 找到方法然后调用
 		// 可以通过反射动态的获取方法，并且调用方法
-		entity.GEntityMgr.Send(rpcPacket)
-	} else if head.DestServerType == rpc3.ServiceType_LoginServer {
+		//entity.GEntityMgr.Send(rpcPacket)
 
+		entity.GEntityMgr.SendMsg(head, funcName, protoMsg)
+	} else if head.DestServerType == rpc3.ServiceType_LoginServer {
+		p.SendToWorldServer(head, funcName, protoMsg)
 	}
 }
 
@@ -134,14 +136,14 @@ func (p *ClientSession) HandleTest(ctx context.Context, test *pb.Test) {
 
 	funcName := "AccountMgr.LoginAccountRequest"
 
-	rpcPacket := pb.Marshal(&head, &funcName, test)
+	//rpcPacket := pb.Marshal(&head, &funcName, test)
 	//rpcPacketData, _ := proto.Marshal(&rpcPacket)
 	//packet := rpc.Packet{
 	//	Id:   head.ConnID,
 	//	Buff: rpcPacketData, // RpcPacket 包含头和参数数据
 	//}
 
-	p.SendToGameServer(funcName, head, rpcPacket)
+	p.SendToGameServer(&head, funcName, test)
 
 	log.Printf("接收测试数据 Name: %s, Password: %s\n", test.Name, test.PassWord)
 }
@@ -150,9 +152,9 @@ func (p *ClientSession) HandleLoginAccount(ctx context.Context, msg *pb.LoginAcc
 	head := ctx.Value("rpcHead").(rpc3.RpcHead)
 
 	funcName := "AccountMgr.LoginAccountRequest"
-	rpcPacket := pb.Marshal(&head, &funcName, msg)
+	//rpcPacket := pb.Marshal(&head, &funcName, msg)
 
-	p.SendToWorldServer(funcName, head, rpcPacket)
+	p.SendToWorldServer(&head, funcName, msg)
 
 }
 

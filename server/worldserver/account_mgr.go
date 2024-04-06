@@ -3,7 +3,9 @@ package worldserver
 import (
 	"context"
 	"github.com/mx5566/logm"
+	"github.com/mx5566/server/base/cluster"
 	"github.com/mx5566/server/base/entity"
+	"github.com/mx5566/server/base/rpc3"
 	"github.com/mx5566/server/server/pb"
 )
 
@@ -33,4 +35,18 @@ func (m *AccountMgr) RegisterAccount() {
 
 func (m *AccountMgr) LoginAccountRequest(ctx context.Context, msg *pb.LoginAccountReq) {
 	logm.DebugfE("账号登录请求:userName:%s, pass:%s", msg.GetUserName(), msg.GetPassword())
+	// 返回一个消息
+	packetHead := ctx.Value("rpcHead").(rpc3.RpcHead)
+
+	cluster.GCluster.SendMsg(&rpc3.RpcHead{
+		ClassName:      "",
+		FuncName:       "",
+		SrcServerID:    SERVER.GetID(),
+		DestServerID:   packetHead.SrcServerID,
+		DestServerType: rpc3.ServiceType_GateServer,
+		ID:             0,
+		ConnID:         packetHead.ConnID,
+		MsgSendType:    rpc3.SendType_SendType_Single,
+	}, "", true)
+
 }
