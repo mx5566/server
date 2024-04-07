@@ -38,6 +38,8 @@ func (m *AccountMgr) LoginAccountRequest(ctx context.Context, msg *pb.LoginAccou
 	// 返回一个消息
 	packetHead := ctx.Value("rpcHead").(rpc3.RpcHead)
 
+	// 处理数据库逻辑 记载账号获取账号相关数据
+
 	cluster.GCluster.SendMsg(&rpc3.RpcHead{
 		ClassName:      "",
 		FuncName:       "",
@@ -47,6 +49,8 @@ func (m *AccountMgr) LoginAccountRequest(ctx context.Context, msg *pb.LoginAccou
 		ID:             0,
 		ConnID:         packetHead.ConnID,
 		MsgSendType:    rpc3.SendType_SendType_Single,
-	}, "", true)
+	}, "", "LoginAccontRep", &pb.LoginAccontRep{
+		AccountId: 1,
+	})
 
 }

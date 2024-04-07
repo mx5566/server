@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/base/network"
 	"github.com/mx5566/server/base/rpc3"
@@ -15,6 +16,10 @@ type clientData struct {
 	ID int32
 }
 
+func HandleMsg(packet rpc3.Packet) {
+	logm.DebugfE("接收到数据了")
+}
+
 func main() {
 
 	//var id int64 = 0
@@ -25,6 +30,7 @@ func main() {
 		client.Init("127.0.0.1", 8080)
 		client.Start()
 		clients[i] = client
+		client.BindPacketFunc(HandleMsg)
 		//client.GetConnId()
 		//ii := atomic.AddInt64(&id, 1)
 		data := pb.LoginAccountReq{

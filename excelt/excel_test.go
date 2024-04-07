@@ -2,7 +2,7 @@ package excelt
 
 import (
 	"fmt"
-	"github.com/xiaonanln/goworld/engine/gwioutil"
+	"github.com/mx5566/server/base"
 	"testing"
 )
 
@@ -10,7 +10,7 @@ func TestGetFileList(t *testing.T) {
 	var listpath = "."
 	//listpath, _ = os.Getwd()
 	_, _ = fmt.Scanf("%s", &listpath)
-	var filter gwioutil.FileFilter
+	var filter base.FileFilter
 	_ = filter.GetFileList(listpath, ".xslx")
 	ListFileFunc(filter.ListFile)
 }

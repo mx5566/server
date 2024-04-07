@@ -131,17 +131,8 @@ func (p *ClientSession) HandlePacket(packet rpc3.Packet) {
 func (p *ClientSession) HandleTest(ctx context.Context, test *pb.Test) {
 	//TODO
 	head := ctx.Value("rpcHead").(rpc3.RpcHead)
-	// 转发到gameserver
-	// 需要知道发送到那个服务器
 
 	funcName := "AccountMgr.LoginAccountRequest"
-
-	//rpcPacket := pb.Marshal(&head, &funcName, test)
-	//rpcPacketData, _ := proto.Marshal(&rpcPacket)
-	//packet := rpc.Packet{
-	//	Id:   head.ConnID,
-	//	Buff: rpcPacketData, // RpcPacket 包含头和参数数据
-	//}
 
 	p.SendToGameServer(&head, funcName, test)
 

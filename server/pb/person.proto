@@ -17,6 +17,19 @@ message LoginAccountReq {
   string Password = 2;
 }
 
+// 登录账号的响应
+message LoginAccontRep {
+  int64  AccountId = 1;
+  repeated  PlayerList pList = 2; // 角色列表
+}
+
+message PlayerList {
+  int64 PlayerId = 1; // 角色ID
+  string PlayerName = 2; // 名字
+  int64 Gold = 3; // 金币数量
+  int32 Level = 4; // 等级
+}
+
 message Test {
   string Name = 1;
   string PassWord =2;
