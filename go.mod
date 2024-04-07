@@ -3,9 +3,11 @@ module github.com/mx5566/server
 go 1.21.0
 
 require (
+	github.com/360EntSecGroup-Skylar/excelize v1.4.1
 	github.com/golang/protobuf v1.5.4
 	github.com/mx5566/logm v0.0.0-20210310054032-928e4ba7f6ac
 	github.com/nats-io/nats.go v1.34.1
+	github.com/xiaonanln/goworld v0.1.6
 	go.etcd.io/etcd/client/v3 v3.5.13
 	google.golang.org/protobuf v1.33.0
 )
@@ -20,6 +22,7 @@ require (
 	github.com/klauspost/compress v1.17.2 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible // indirect
 	github.com/lestrrat-go/strftime v1.0.3 // indirect
+	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pkg/errors v0.8.1 // indirect

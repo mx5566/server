@@ -21,6 +21,11 @@ const (
 
 const ServiceName = "Server/"
 
+const (
+	Json = ".json"
+	Xlsx = ".xlsx"
+)
+
 // 输出错误，跟踪代码
 func TraceCode(code ...interface{}) {
 	var buf [4096]byte

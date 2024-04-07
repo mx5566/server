@@ -1,0 +1,9 @@
+ID	物品名	类型	等级	血量	攻击间隔	攻击距离	
+ID	Name	Type	Level	Hp	AttackInter	AttackDistance	
+int	string	int	int	int64	int32	float32	
+1	野猪	1	100	100000	1000	3	
+2	佩奇	2	199	10000	1000	5	
+3	狮子王	3	200	99999	5000	10	
+4	恐龙王	4	999	989898	3000	1	
+5	鸡场	5	10000	100000	2000	2.1	
+							
