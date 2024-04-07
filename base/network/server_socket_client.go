@@ -3,6 +3,7 @@ package network
 import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/base/rpc3"
 	"github.com/mx5566/server/server/pb"
@@ -17,7 +18,8 @@ type IServerSocketClient interface {
 
 type ServerSocketClient struct {
 	Socket
-	sc *ServerSocket
+	sc           *ServerSocket
+	sendBuffChan chan []byte
 }
 
 func (s *ServerSocketClient) Init(ip string, port uint16) bool {
@@ -36,7 +38,77 @@ func (s *ServerSocketClient) Init(ip string, port uint16) bool {
 func (s *ServerSocketClient) Start() bool {
 	go s.Run()
 
+	// 启动一个写线程
+	go s.Write()
+
 	return true
+}
+
+func (s *ServerSocketClient) Send(packet rpc3.Packet) {
+	defer func() {
+		if err := recover(); err != nil {
+			base.TraceCode(err)
+		}
+	}()
+
+	select {
+	case s.sendBuffChan <- packet.Buff:
+	}
+
+}
+
+func (s *ServerSocketClient) Write() bool {
+	// defer 的生命周期与函数绑定，函数返回他也跟随被释放
+	loop := func() bool {
+		defer func() {
+			if err := recover(); err != nil {
+				base.TraceCode(err)
+			}
+		}()
+
+		// 连接不存在
+		if s.conn == nil {
+			return false
+		}
+
+		select {
+		case buff := <-s.sendBuffChan:
+			if buff == nil { //信道关闭
+				return false
+			} else {
+				s.SendNow(buff)
+			}
+		}
+
+		return true
+	}
+
+	for {
+		if !loop() {
+			break
+		}
+	}
+
+	return false
+}
+
+func (s *ServerSocketClient) SendNow(buff []byte) {
+	defer func() {
+		if err := recover(); err != nil {
+			base.TraceCode(err)
+		}
+	}()
+
+	if s.conn == nil {
+		return
+	} else if len(buff) > s.nMaxSendBuffSize {
+		logm.PanicfE("send over maxsendbuff: %dMB\n", s.nMaxSendBuffSize/1024/1024)
+	}
+
+	_, err := s.conn.Write(buff)
+	if err != nil {
+		logm.ErrorfE("ServerSocketClient 发送数据失败 err:%s", err.Error())
+	}
 }
 
 func (s *ServerSocketClient) Run() bool {

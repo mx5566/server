@@ -3,6 +3,7 @@ package network
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/base/rpc3"
 	"log"
@@ -24,7 +25,7 @@ type ISocket interface {
 	BindPacketFunc(HandleFunc)
 	Connect() bool
 	OnNetFail()
-	Send([]byte)
+	Send(rpc3.Packet)
 	GetConnId() uint32
 	SetSessionType(SESSION_TYPE)
 	GetSessionType() SESSION_TYPE
@@ -36,6 +37,7 @@ type Socket struct {
 	conn             net.Conn
 	nReceBuff        []byte
 	nMaxReceBuffSize int // 避免无效包
+	nMaxSendBuffSize int
 	connId           uint32
 	session          ISession
 	sessionType      SESSION_TYPE
@@ -50,6 +52,10 @@ func (s *Socket) SetSessionType(sessionType SESSION_TYPE) {
 	s.sessionType = sessionType
 }
 
+func (s *Socket) name() {
+
+}
+
 func (s *Socket) GetSessionType() SESSION_TYPE {
 	return s.sessionType
 }
@@ -62,7 +68,8 @@ func (s *Socket) Init(ip string, port uint16) bool {
 	s.Ip = ip
 	s.Port = port
 
-	s.nMaxReceBuffSize = 10 * 1024 * 1024 // 10MB
+	s.nMaxReceBuffSize = 1 * 1024 * 1024 // 10MB
+	s.nMaxSendBuffSize = 10 * 1024 * 1024
 	return true
 }
 
@@ -81,7 +88,7 @@ func (s *Socket) Stop() bool {
 	return true
 }
 
-func (s *Socket) Send(b []byte) {
+func (s *Socket) Send(rpcPacket rpc3.Packet) {
 	defer func() {
 		if err := recover(); err != nil {
 			base.TraceCode(err)
@@ -90,11 +97,11 @@ func (s *Socket) Send(b []byte) {
 
 	if s.conn == nil {
 		return
-	} else if len(b) > 100000 {
-		panic("send over base.MAX_PACKET")
+	} else if len(rpcPacket.Buff) > s.nMaxSendBuffSize {
+		logm.PanicfE("send over maxsendbuff: %dMB\n", s.nMaxSendBuffSize/1024/1024)
 	}
 
-	_, _ = s.conn.Write(b)
+	_, _ = s.conn.Write(rpcPacket.Buff)
 }
 
 func (s *Socket) Run() bool {

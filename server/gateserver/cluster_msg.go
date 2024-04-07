@@ -17,7 +17,7 @@ func HandleMsg(packet rpc3.Packet) {
 			entity.GEntityMgr.Send(*rpcPacket)
 		} else {
 			// 需要转发到客户端
-			SERVER.SendToClient()
+			SERVER.SendToClient(*rpcPacket)
 		}
 
 	} else {

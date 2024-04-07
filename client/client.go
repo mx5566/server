@@ -5,6 +5,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/base/network"
+	"github.com/mx5566/server/base/rpc3"
 	"github.com/mx5566/server/server/pb"
 	"hash/crc32"
 	"time"
@@ -41,7 +42,7 @@ func main() {
 		dp := network.DataPacket{}
 		buff := dp.Encode(msg)
 
-		client.Send(buff)
+		client.Send(rpc3.Packet{Buff: buff})
 	}
 
 	time.Sleep(100 * time.Second)
