@@ -8,9 +8,14 @@ import (
 )
 
 type GateServer struct {
+	s *network.ServerSocket
 }
 
 var SERVER GateServer
+
+func (gs *GateServer) GetServer() *network.ServerSocket {
+	return gs.s
+}
 
 func (gs *GateServer) Init() {
 	// 日志初始化
@@ -24,6 +29,8 @@ func (gs *GateServer) Init() {
 	s.BindPacketFunc(session.HandlePacket)
 	s.Start()
 
+	gs.s = s
+
 	cluster.GCluster.InitCluster(&rpc3.ClusterInfo{
 		Ip:          "0.0.0.0",
 		Port:        8080,
@@ -34,9 +41,16 @@ func (gs *GateServer) Init() {
 	}, rpc3.NatsConfig{
 		EndPoints: []string{"127.0.0.1:4222"},
 	})
+	cluster.GCluster.BindPacketFunc(cluster.GCluster.HandleMsg)
+
 }
 
 // 可以用IP+PORT 求一个哈希值
 func (gs *GateServer) GetID() uint32 {
 	return cluster.GCluster.ClusterInfo.Id()
+}
+
+func (gs *GateServer) SendToClient(rpcPacket rpc3.RpcPacket) {
+
+	gs.s.SendMsg(rpcPacket)
 }

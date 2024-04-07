@@ -95,6 +95,16 @@ func (m *EntityMgr) Send(packet rpc3.RpcPacket) {
 	}
 }
 
+func (m *EntityMgr) IsHasMethod(className, funcName string) bool {
+	if v, ok := m.Entitys[className]; ok && v != nil {
+		if v.IsExistMethod(funcName) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (m *EntityMgr) Call(packet rpc3.RpcPacket) {
 	className := packet.Head.ClassName
 	funcName := packet.Head.FuncName
