@@ -128,24 +128,6 @@ func (c *Cluster) HandlePacket(packet rpc3.Packet) {
 	c.handleFunc(packet)
 }
 
-func (c *Cluster) HandleMsg(packet rpc3.Packet) {
-	rpcPacket := &rpc3.RpcPacket{}
-	_ = proto.Unmarshal(packet.Buff, rpcPacket)
-	if c.ClusterInfo.GetServiceType() == rpc3.ServiceType_GateServer {
-		// 一种格式需要本地处理 一种是转发到客户端
-		if entity.GEntityMgr.IsHasMethod(rpcPacket.Head.ClassName, rpcPacket.Head.FuncName) {
-			// 本地有映射的方法
-			entity.GEntityMgr.Send(*rpcPacket)
-		} else {
-			// 需要转发到客户端
-
-		}
-
-	} else {
-		entity.GEntityMgr.Send(*rpcPacket)
-	}
-}
-
 func (c *Cluster) InitNats(natsConfig rpc3.NatsConfig) {
 	ops := []nats.Option{}
 

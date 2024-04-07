@@ -41,7 +41,7 @@ func (gs *GateServer) Init() {
 	}, rpc3.NatsConfig{
 		EndPoints: []string{"127.0.0.1:4222"},
 	})
-	cluster.GCluster.BindPacketFunc(cluster.GCluster.HandleMsg)
+	cluster.GCluster.BindPacketFunc(HandleMsg)
 
 }
 

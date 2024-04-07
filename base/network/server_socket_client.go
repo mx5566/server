@@ -177,8 +177,8 @@ func (s *ServerSocketClient) OnNetFail() {
 
 	s.handleFunc(packet)
 
-	// 通知写写成结束
-	s.sendBuffChan <- nil
+	//s.session.AddQueue(msg)
+
 	// 底层网路删除
 	s.Stop()
 	s.sc.DelConn(s.connId)
