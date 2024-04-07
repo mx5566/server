@@ -54,9 +54,11 @@ func (c *Cluster) SendMsg(head *rpc3.RpcHead, funcName string, param ...interfac
 			_ = c.natsClient.Publish(top, buff)
 
 			logm.ErrorfE("发送数据到worlsserv: %s", top)
-
 		} else if head.DestServerType == rpc3.ServiceType_GateServer {
+			top := fmt.Sprintf("%s%s/%d", base.ServiceName, head.DestServerType.String(), head.DestServerID)
 
+			buff, _ := proto.Marshal(&rpcPacket)
+			_ = c.natsClient.Publish(top, buff)
 		} else if head.DestServerType == rpc3.ServiceType_GameServer {
 
 		}
@@ -124,6 +126,24 @@ func (c *Cluster) BindPacketFunc(hFunc network.HandleFunc) {
 
 func (c *Cluster) HandlePacket(packet rpc3.Packet) {
 	c.handleFunc(packet)
+}
+
+func (c *Cluster) HandleMsg(packet rpc3.Packet) {
+	rpcPacket := &rpc3.RpcPacket{}
+	_ = proto.Unmarshal(packet.Buff, rpcPacket)
+	if c.ClusterInfo.GetServiceType() == rpc3.ServiceType_GateServer {
+		// 一种格式需要本地处理 一种是转发到客户端
+		if entity.GEntityMgr.IsHasMethod(rpcPacket.Head.ClassName, rpcPacket.Head.FuncName) {
+			// 本地有映射的方法
+			entity.GEntityMgr.Send(*rpcPacket)
+		} else {
+			// 需要转发到客户端
+
+		}
+
+	} else {
+		entity.GEntityMgr.Send(*rpcPacket)
+	}
 }
 
 func (c *Cluster) InitNats(natsConfig rpc3.NatsConfig) {

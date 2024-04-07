@@ -1,7 +1,13 @@
 package network
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
+	"github.com/golang/protobuf/proto"
+	"github.com/mx5566/logm"
+	"github.com/mx5566/server/base"
+	"github.com/mx5566/server/base/rpc3"
 	"net"
 	"strconv"
 	"strings"
@@ -75,6 +81,46 @@ func (s *ServerSocket) AddConn(conn *net.TCPConn) {
 	s.clientMutex.Unlock()
 
 	ssc.Start()
+}
+
+func (s *ServerSocket) GetConn(connId uint32) *ServerSocketClient {
+	s.clientMutex.Lock()
+	ss, ok := s.Clients[connId]
+	if ok {
+		return ss
+	}
+	s.clientMutex.Unlock()
+
+	return nil
+}
+
+func (s *ServerSocket) SendMsg(rpcPacket rpc3.RpcPacket) {
+	ss := s.GetConn(rpcPacket.Head.ConnID)
+	if ss == nil {
+		logm.ErrorfE("发送数据失败，链接不存在了: %d", rpcPacket.Head.ConnID)
+		return
+	}
+
+	// rpcpacket.Buff 是数据
+	// 需要消息的名字
+	buff := bytes.NewBuffer(rpcPacket.GetBuff())
+	decod := gob.NewDecoder(buff)
+	var msgName string
+	decod.Decode(&msgName)
+
+	protoMsg := base.GetProMessageByName(msgName)
+	decod.Decode(protoMsg)
+
+	var msg MsgPacket
+	msg.MsgId = base.GetMessageID(protoMsg)
+	b, _ := proto.Marshal(protoMsg)
+	msg.MsgBody = b
+	var dataPack DataPacket
+
+	packet := rpc3.Packet{
+		Buff: dataPack.Encode(&msg),
+	}
+	ss.Send(packet)
 }
 
 func (s *ServerSocket) Stop() bool {

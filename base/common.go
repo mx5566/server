@@ -3,6 +3,10 @@ package base
 import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"github.com/mx5566/logm"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"hash/crc32"
 	"log"
 	"reflect"
 	"runtime"
@@ -36,6 +40,22 @@ func GetMessageName(msg proto.Message) string {
 	}
 
 	return string(name)
+}
+
+func GetProMessageByName(name string) proto.Message {
+	messageType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(name))
+	if err != nil {
+		logm.ErrorfE("根据proto消息的名字获取类型失败: %s err : %s", name, err.Error())
+		return nil
+	}
+	msg := proto.MessageV1(messageType.New())
+
+	return msg
+}
+
+func GetMessageID(msg proto.Message) uint32 {
+	name := GetMessageName(msg)
+	return crc32.ChecksumIEEE([]byte(name))
 }
 
 func GetClassName(class interface{}) string {
