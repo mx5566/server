@@ -1,7 +1,7 @@
 package network
 
 import (
-	"fmt"
+	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
 	"io"
 )
@@ -55,12 +55,12 @@ func (s *ClientSocket) Run() bool {
 
 		n, err := s.conn.Read(buff)
 		if err == io.EOF {
-			fmt.Printf("远程链接：%s已经关闭！\n", s.conn.RemoteAddr().String())
+			logm.ErrorE("远程链接：%s已经关闭！\n", s.conn.RemoteAddr().String())
 			return false
 		}
 
 		if err != nil {
-			fmt.Printf("数据接收错误：%s 错误: %s\n", s.conn.RemoteAddr().String(), err.Error())
+			logm.ErrorE("数据接收错误：%s 错误: %s\n", s.conn.RemoteAddr().String(), err.Error())
 			return false
 		}
 

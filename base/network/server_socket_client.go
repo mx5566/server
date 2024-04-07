@@ -25,12 +25,7 @@ type ServerSocketClient struct {
 func (s *ServerSocketClient) Init(ip string, port uint16) bool {
 	s.Socket.Init(ip, port)
 
-	//factory := GSessionFactoryMgr.GetFactory(int(s.GetSessionType()))
-
-	//s.session = factory.CreateSession()
-	//s.session.SetSocket(s)
-	//s.session.SetFactory(factory)
-	//s.session.Init()
+	s.sendBuffChan = make(chan []byte)
 
 	return true
 }
@@ -53,6 +48,8 @@ func (s *ServerSocketClient) Send(packet rpc3.Packet) {
 
 	select {
 	case s.sendBuffChan <- packet.Buff:
+	default:
+		// 进入到这里说明发送发送协成conn写数据阻塞了，可能网络不好
 	}
 
 }
@@ -72,8 +69,8 @@ func (s *ServerSocketClient) Write() bool {
 		}
 
 		select {
-		case buff := <-s.sendBuffChan:
-			if buff == nil { //信道关闭
+		case buff, _ := <-s.sendBuffChan:
+			if buff == nil { // socket关闭了
 				return false
 			} else {
 				s.SendNow(buff)
@@ -180,8 +177,8 @@ func (s *ServerSocketClient) OnNetFail() {
 
 	s.handleFunc(packet)
 
-	//s.session.AddQueue(msg)
-
+	// 通知写写成结束
+	s.sendBuffChan <- nil
 	// 底层网路删除
 	s.Stop()
 	s.sc.DelConn(s.connId)
