@@ -20,7 +20,7 @@ func TestMongo(t *testing.T) {
 	ctx := context.Background()
 
 	//连接数据库
-	err := NewMongoDB(ctx, "mongodb://localhost:27017")
+	err := NewMongoDB(ctx, "mongodb://mengxiang:123456@localhost:27017/?authSource=admin")
 	if err != nil {
 		log.Fatalf("%s", err)
 		return

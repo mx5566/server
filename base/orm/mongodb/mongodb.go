@@ -7,12 +7,39 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 var client *mongo.Client
 
+type MongoOptions struct {
+	appUri  string
+	appName string
+}
+
+type Option func(clientOptions *options.ClientOptions)
+
+func WithAppUri(uri string) Option {
+	return func(clientOptions *options.ClientOptions) {
+		clientOptions.ApplyURI(uri)
+	}
+}
+
+func WithAppName(name string) Option {
+	return func(clientOptions *options.ClientOptions) {
+		clientOptions.SetAppName(name)
+	}
+}
+
+func New1111(ctx context.Context, opts ...*options.ClientOptions) {
+
+}
+
 func NewMongoDB(ctx context.Context, appUri string) error {
 	//连接到mongodb
+	opts := []*options.ClientOptions{}
+	opts = append(opts, options.Client().ApplyURI(appUri))
+	opts = append(opts, options.Client().SetMaxConnIdleTime(30*60*time.Second))
 	c, err := mongo.Connect(ctx, options.Client().ApplyURI(appUri))
 	if err != nil {
 		logm.PanicfE("mongodb 数据库连接失败: %s", err.Error())
@@ -105,7 +132,7 @@ func (mg *MongoDB[T]) UpdateOne(ctx context.Context, filter filter, update inter
 
 // 根据id更新
 func (mg *MongoDB[T]) UpdateOneById(ctx context.Context, id string, update interface{}) (int64, error) {
-	result, err := mg.getCollection().UpdateOne(ctx, filter{{Key: "_id", Value: mg.ObjectID(id)}}, update)
+	result, err := mg.getCollection().UpdateOne(ctx, filter{bson.E{Key: "_id", Value: mg.ObjectID(id)}}, update)
 	return result.ModifiedCount, err
 }
 
