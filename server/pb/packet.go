@@ -19,6 +19,8 @@ func Route(head *rpc3.RpcHead, funcName string) string {
 			head.DestServerType = rpc3.ServiceType_GameServer
 		case "loginserver":
 			head.DestServerType = rpc3.ServiceType_LoginServer
+		case "worldserver":
+			head.DestServerType = rpc3.ServiceType_WorldServer
 		}
 		funcName = strs[1]
 	}

@@ -1,6 +1,7 @@
 package gateserver
 
 import (
+	"context"
 	"github.com/golang/protobuf/proto"
 	"github.com/mx5566/server/base/cluster"
 	"github.com/mx5566/server/base/entity"
@@ -19,8 +20,22 @@ func HandleMsg(packet rpc3.Packet) {
 			// 需要转发到客户端
 			SERVER.SendToClient(*rpcPacket)
 		}
-
 	} else {
 		entity.GEntityMgr.Send(*rpcPacket)
 	}
+}
+
+type ClusterMsg struct {
+	entity.Entity
+}
+
+func (c *ClusterMsg) Init() {
+	c.Entity.Init()
+	c.Entity.Start()
+	entity.GEntityMgr.RegisterEntity(c)
+}
+
+// 账号登录了
+func (c *ClusterMsg) AccountLogin(ctx context.Context, accountId int64, accountName string) {
+
 }

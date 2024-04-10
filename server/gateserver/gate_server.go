@@ -8,7 +8,8 @@ import (
 )
 
 type GateServer struct {
-	s *network.ServerSocket
+	s    *network.ServerSocket
+	pMgr *PlayerMgr
 }
 
 var SERVER GateServer
@@ -43,11 +44,19 @@ func (gs *GateServer) Init() {
 	})
 	cluster.GCluster.BindPacketFunc(HandleMsg)
 
+	// 初始化playerMGr
+	gs.pMgr = new(PlayerMgr)
+	gs.pMgr.Init()
 }
 
 // 可以用IP+PORT 求一个哈希值
 func (gs *GateServer) GetID() uint32 {
 	return cluster.GCluster.ClusterInfo.Id()
+}
+
+func (gs *GateServer) GetPlayerMgr() *PlayerMgr {
+
+	return gs.pMgr
 }
 
 func (gs *GateServer) SendToClient(rpcPacket rpc3.RpcPacket) {
