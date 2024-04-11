@@ -2,6 +2,7 @@ package gateserver
 
 import (
 	"github.com/mx5566/logm"
+	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/base/cluster"
 	"github.com/mx5566/server/base/network"
 	"github.com/mx5566/server/base/rpc3"
@@ -47,6 +48,12 @@ func (gs *GateServer) Init() {
 	// 初始化playerMGr
 	gs.pMgr = new(PlayerMgr)
 	gs.pMgr.Init()
+
+	n := new(ClusterMsg)
+	n.Init()
+
+	pr := new(base.Pprof)
+	pr.Init()
 }
 
 // 可以用IP+PORT 求一个哈希值
