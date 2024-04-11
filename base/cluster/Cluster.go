@@ -35,41 +35,49 @@ type Cluster struct {
 }
 
 func (c *Cluster) SendMsg(head *rpc3.RpcHead, funcName string, param ...interface{}) {
-	rpcPacket := pb.Marshal(head, &funcName, param)
+	rpcPacket := pb.Marshal(head, &funcName, param...)
 
+	c.Send(rpcPacket)
+}
+
+func (c *Cluster) Send(packet rpc3.RpcPacket) {
+	head := packet.Head
 	switch head.MsgSendType {
 	case rpc3.SendType_SendType_Local:
-		entity.GEntityMgr.Send(rpcPacket)
+		entity.GEntityMgr.Send(packet)
 	case rpc3.SendType_SendType_Single:
 		if head.DestServerType == rpc3.ServiceType_WorldServer {
 			// 有多个worldserver 发送那个呢
 			// 先随机一个服务器
 			clusterID := c.clusterMap[head.DestServerType][crc32.ChecksumIEEE([]byte("0.0.0.0:9999"))]
+			if clusterID == nil {
+				logm.ErrorfE("worldserver没找到")
+				return
+			}
 
 			top := fmt.Sprintf("%s%s/%d", base.ServiceName, head.DestServerType.String(), clusterID.Id())
 
 			head.DestServerID = clusterID.Id()
 
-			buff, _ := proto.Marshal(&rpcPacket)
+			buff, _ := proto.Marshal(&packet)
 			_ = c.natsClient.Publish(top, buff)
 
 			logm.ErrorfE("发送数据到worlsserv: %s", top)
 		} else if head.DestServerType == rpc3.ServiceType_GateServer {
 			top := fmt.Sprintf("%s%s/%d", base.ServiceName, head.DestServerType.String(), head.DestServerID)
 
-			buff, _ := proto.Marshal(&rpcPacket)
+			buff, _ := proto.Marshal(&packet)
 			_ = c.natsClient.Publish(top, buff)
 		} else if head.DestServerType == rpc3.ServiceType_GameServer {
 
 		}
 	case rpc3.SendType_SendType_BroadCast:
-		buff, _ := proto.Marshal(&rpcPacket)
+		buff, _ := proto.Marshal(&packet)
 		c.natsClient.Publish(fmt.Sprintf("%s%s", base.ServiceName, head.DestServerType.String()), buff)
 	}
-
 }
 
-func (c *Cluster) RandomClusterBuType(serviceType rpc3.ServiceType) *rpc3.ClusterInfo {
+func (c *Cluster) RandomClusterByType(serviceType rpc3.ServiceType) *rpc3.ClusterInfo {
 	return nil
 
 }

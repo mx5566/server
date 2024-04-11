@@ -37,5 +37,11 @@ func (c *ClusterMsg) Init() {
 
 // 账号登录了
 func (c *ClusterMsg) AccountLogin(ctx context.Context, accountId int64, accountName string) {
+	head := ctx.Value("rpcHead").(rpc3.RpcHead)
+	entity.GEntityMgr.SendMsg(head, "PlayerMgr.AccountLogin", accountId)
+}
 
+func (c ClusterMsg) PlayerLogin(ctx context.Context, accountId, playerId int64) {
+	head := ctx.Value("rpcHead").(rpc3.RpcHead)
+	entity.GEntityMgr.SendMsg(head, "PlayerMgr.PlayerLogin", accountId, playerId)
 }

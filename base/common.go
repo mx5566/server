@@ -26,6 +26,15 @@ const (
 	Xlsx = ".xlsx"
 )
 
+type LoginState uint8
+
+const (
+	LoginState_None            LoginState = iota
+	LoginState_AccountLogining            // 账号登录中
+	LoginState_AccountLogin               // 账号登陆了 进入角色选择界面
+	LoginState_PlayerLogin                // 玩家选择角色登录游戏了
+)
+
 // 输出错误，跟踪代码
 func TraceCode(code ...interface{}) {
 	var buf [4096]byte

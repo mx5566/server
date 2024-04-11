@@ -35,6 +35,7 @@ type IEntity interface {
 	SetEntityPool(pool IEntityPool)
 	SetEntityType(EntityType)
 	Send(packet rpc3.RpcPacket)
+	Self() IEntity
 }
 
 type Entity struct {
@@ -55,6 +56,10 @@ func (e *Entity) Init() {
 
 	e.mailBox = mpsc.New[*rpc3.RpcPacket]()
 	e.mailChan = make(chan bool)
+}
+
+func (e *Entity) Self() IEntity {
+	return e
 }
 
 func (e *Entity) Start() {

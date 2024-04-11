@@ -25,7 +25,7 @@ func main() {
 	//var id int64 = 0
 
 	clients := make(map[int]network.ISocket)
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 10; i++ {
 		client := new(network.ClientSocket)
 		client.Init("127.0.0.1", 8080)
 		client.Start()
@@ -49,6 +49,8 @@ func main() {
 		buff := dp.Encode(msg)
 
 		client.Send(rpc3.Packet{Buff: buff})
+		time.Sleep(3 * time.Second)
+
 	}
 
 	time.Sleep(100 * time.Second)

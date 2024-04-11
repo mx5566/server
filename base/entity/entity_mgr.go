@@ -48,9 +48,8 @@ func CreateEntityMgr() *EntityMgr {
 	return &EntityMgr{Entitys: map[string]IEntity{}}
 }
 
-func (m *EntityMgr) SendMsg(head *rpc3.RpcHead, funcName string, params ...interface{}) {
-	head.ConnID = 0
-	rpcPacket := pb.Marshal(head, &funcName, params...)
+func (m *EntityMgr) SendMsg(head rpc3.RpcHead, funcName string, params ...interface{}) {
+	rpcPacket := pb.Marshal(&head, &funcName, params...)
 
 	m.Send(rpcPacket)
 }
@@ -87,7 +86,7 @@ func (m *EntityMgr) Send(packet rpc3.RpcPacket) {
 		if v.IsExistMethod(funcName) {
 			switch v.GetEntityType() {
 			case EntityType_Single:
-				v.Send(packet)
+				v.Self().Send(packet)
 			case EntityType_Pool:
 				v.GetEntityPool().CallEntity(packet)
 			}

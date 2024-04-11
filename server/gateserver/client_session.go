@@ -11,7 +11,6 @@ import (
 	"github.com/mx5566/server/base/rpc3"
 	"github.com/mx5566/server/server/pb"
 	"hash/crc32"
-	"log"
 	"reflect"
 )
 
@@ -33,18 +32,18 @@ func NewSession() *ClientSession {
 	return s
 }
 
-func (p *ClientSession) SendToGameServer(head *rpc3.RpcHead, funcName string, param ...interface{}) {
+func (p *ClientSession) SendToGameServer(head rpc3.RpcHead, funcName string, param ...interface{}) {
 	head.DestServerType = rpc3.ServiceType_GameServer
 	head.MsgSendType = rpc3.SendType_SendType_Single
 
-	cluster.GCluster.SendMsg(head, funcName, param)
+	cluster.GCluster.SendMsg(&head, funcName, param...)
 }
 
-func (p *ClientSession) SendToWorldServer(head *rpc3.RpcHead, funcName string, param ...interface{}) {
+func (p *ClientSession) SendToWorldServer(head rpc3.RpcHead, funcName string, param ...interface{}) {
 	head.DestServerType = rpc3.ServiceType_WorldServer
 	head.MsgSendType = rpc3.SendType_SendType_Single
 
-	cluster.GCluster.SendMsg(head, funcName, param)
+	cluster.GCluster.SendMsg(&head, funcName, param...)
 }
 
 func (p *ClientSession) Init() {
@@ -111,20 +110,20 @@ func (p *ClientSession) HandlePacket(packet rpc3.Packet) {
 	// "gateserver<-ClientSession.HandleTest"
 	funcName := route.FuncName
 
-	//rpcPacket := pb.Marshal(head, &funcName, protoMsg)
+	pb.Route(head, funcName)
 
 	if head.DestServerType == rpc3.ServiceType_GameServer {
 		//
-		p.SendToGameServer(head, funcName, protoMsg)
+		p.SendToGameServer(*head, funcName, protoMsg)
 	} else if head.DestServerType == rpc3.ServiceType_GateServer {
 		// 加入是本地的话调用本地的方法
 		// 我们需要根据类名 函数名 找到方法然后调用
 		// 可以通过反射动态的获取方法，并且调用方法
 		//entity.GEntityMgr.Send(rpcPacket)
 
-		entity.GEntityMgr.SendMsg(head, funcName, protoMsg)
+		entity.GEntityMgr.SendMsg(*head, funcName, protoMsg)
 	} else if head.DestServerType == rpc3.ServiceType_LoginServer {
-		p.SendToWorldServer(head, funcName, protoMsg)
+		p.SendToWorldServer(*head, funcName, protoMsg)
 	}
 }
 
@@ -134,24 +133,31 @@ func (p *ClientSession) HandleTest(ctx context.Context, test *pb.Test) {
 
 	funcName := "AccountMgr.LoginAccountRequest"
 
-	p.SendToGameServer(&head, funcName, test)
+	p.SendToGameServer(head, funcName, test)
 
-	log.Printf("接收测试数据 Name: %s, Password: %s\n", test.Name, test.PassWord)
+	logm.DebugfE("接收测试数据 Name: %s, Password: %s\n", test.Name, test.PassWord)
 }
 
 func (p *ClientSession) HandleLoginAccount(ctx context.Context, msg *pb.LoginAccountReq) {
 	head := ctx.Value("rpcHead").(rpc3.RpcHead)
 
 	// 只有connID，其他的账号id 和玩家id还没有
+	player := new(Player)
+	player.State = base.LoginState_AccountLogining
+	player.ConnID = head.ConnID
+
+	entity.GEntityMgr.SendMsg(head, "PlayerMgr.AccountLogining", player)
 
 	funcName := "AccountMgr.LoginAccountRequest"
-	//rpcPacket := pb.Marshal(&head, &funcName, msg)
 
-	p.SendToWorldServer(&head, funcName, msg)
-
+	p.SendToWorldServer(head, funcName, msg)
 }
 
 func (p *ClientSession) HandleDisconnect(ctx context.Context, dis *pb.Disconnect) {
-	log.Printf("客户端断开连接:%d\n", dis.ConnId)
+	logm.DebugfE("客户端断开连接:%d\n", dis.ConnId)
 
+	//
+	entity.GEntityMgr.SendMsg(rpc3.RpcHead{ConnID: dis.GetConnId()}, "PlayerMgr.AccountLogining", dis.GetConnId())
+
+	// 通知到游戏服务器玩家下线了做业务处理
 }

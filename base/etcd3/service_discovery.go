@@ -82,7 +82,7 @@ func (sd *ServiceDiscovery) AddServiceNode(by []byte) {
 	}
 
 	logm.DebugfE("服务发现新的服务器配置:%s", clsterInfo.String())
-	entity.GEntityMgr.SendMsg(&rpc3.RpcHead{}, "Cluster.AddClusterNode", clsterInfo)
+	entity.GEntityMgr.SendMsg(rpc3.RpcHead{}, "Cluster.AddClusterNode", clsterInfo)
 }
 
 func (sd *ServiceDiscovery) DeleteServiceNode(by []byte) {

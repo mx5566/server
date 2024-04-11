@@ -49,7 +49,7 @@ func (m *AccountMgr) LoginAccountRequest(ctx context.Context, msg *pb.LoginAccou
 		ID:             0,
 		ConnID:         packetHead.ConnID,
 		MsgSendType:    rpc3.SendType_SendType_Single,
-	}, "", "LoginAccontRep", &pb.LoginAccontRep{
+	}, "gateserver<-ClusterMsg.AccountLogin", "LoginAccontRep", &pb.LoginAccontRep{
 		AccountId: 1,
 	})
 
