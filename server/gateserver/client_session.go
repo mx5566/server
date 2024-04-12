@@ -146,7 +146,7 @@ func (p *ClientSession) HandleLoginAccount(ctx context.Context, msg *pb.LoginAcc
 	player.State = base.LoginState_AccountLogining
 	player.ConnID = head.ConnID
 
-	entity.GEntityMgr.SendMsg(head, "PlayerMgr.AccountLogining", player)
+	//entity.GEntityMgr.SendMsg(head, "PlayerMgr.AccountLogining", player)
 
 	funcName := "AccountMgr.LoginAccountRequest"
 
