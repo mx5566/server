@@ -4,3 +4,4 @@ client/client.exe
 server.exe
 profile
 trace
+/base/aoi/test_aoi.pprof
