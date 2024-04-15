@@ -5,3 +5,4 @@ server.exe
 profile
 trace
 /base/aoi/test_aoi.pprof
+base/path/astar/layout.txt
