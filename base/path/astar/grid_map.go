@@ -15,8 +15,8 @@ type GridMapHeader struct {
 }
 
 type GridMapInfo struct {
-	Head  GridMapHeader
-	Block [][]int32 `json:"blocks"`
+	Head  GridMapHeader `json:"head"`
+	Block [][]int32     `json:"blocks"`
 }
 
 func (i *GridMapInfo) GetGridWidth() int32 {
@@ -40,7 +40,7 @@ func (i *GridMapInfo) Getheight() int32 {
 }
 
 func (i *GridMapInfo) IsBlock(x, y int32) bool {
-	return i.Block[x][y] == GridKindBlock
+	return i.Block[y][x] == GridKindBlock
 }
 
 // 格子地图
@@ -78,7 +78,7 @@ func (g *GridMap) Load(path string) error {
 	var i, j int32 = 0, 0
 	for i = 0; i < height; i++ {
 		for j = 0; j < width; j++ {
-			g.grids[i] = &Grid{
+			g.grids[i*height+j] = &Grid{
 				x:  j,
 				y:  i,
 				gm: g,
@@ -129,10 +129,13 @@ func (g *GridMap) FindPath(start, end base.Vector3, points *[]base.Vector3) bool
 		return false
 	}
 
+	width := g.gridMapInfo.GetGridWidth()
+	height := g.gridMapInfo.GetGridHeight()
 	for _, v := range pathList {
 		grid := v.(*Grid)
-		x := grid.x*g.gridMapInfo.GetGridWidth() + g.gridMapInfo.GetGridWidth()/2
-		y := grid.y*g.gridMapInfo.GetGridHeight() + g.gridMapInfo.GetGridHeight()/2
+
+		x := float32(grid.x*width) + float32(width)/2
+		y := float32(grid.y*height) + float32(height)/2
 		*points = append(*points, base.Vector3{X: base.Coord(x), Y: base.Coord(0), Z: base.Coord(y)})
 	}
 
@@ -145,17 +148,22 @@ func (g *GridMap) PosToGrid(pos base.Vector3) (x, y int32) {
 }
 
 func (g *GridMap) GetRandomPoint() (bool, base.Vector3) {
-	x1, y1 := base.RandomInt[int32](0, g.gridMapInfo.GetWidth()), base.RandomInt[int32](0, g.gridMapInfo.Getheight())
+	x1, y1 := base.RandomInt32(0, g.gridMapInfo.GetWidth()), base.RandomInt32(0, g.gridMapInfo.Getheight())
 	var time = 0
 	var x, y int32
-	for x, y = x1, y1; g.IsHasBlockGrid(x, y); {
+	find := true
+	for x, y = int32(x1), int32(y1); g.IsHasBlockGrid(x, y); {
 		time++
 		if time > 100 {
+			find = false
 			return false, base.Vector3{}
 		}
 
-		x, y = base.RandomInt[int32](0, g.gridMapInfo.GetWidth()), base.RandomInt[int32](0, g.gridMapInfo.Getheight())
+		x, y = base.RandomInt32(0, g.gridMapInfo.GetWidth()), base.RandomInt32(0, g.gridMapInfo.Getheight())
 	}
 
+	if !find {
+		return false, base.Vector3{}
+	}
 	return true, base.Vector3{X: base.Coord(x + g.gridMapInfo.GetGridWidth()/2.0), Y: base.Coord(0), Z: base.Coord(y + g.gridMapInfo.GetGridHeight()/2.0)}
 }

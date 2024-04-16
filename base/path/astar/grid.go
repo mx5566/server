@@ -29,7 +29,7 @@ func (t *Grid) PathNeighbors() []Pather {
 		{0, 1},
 	} {
 		x := t.x + offset[0]
-		y := t.x + offset[1]
+		y := t.y + offset[1]
 		if n := t.gm.Grid(x, y); n != nil {
 			if !n.gm.IsHasBlockGrid(x, y) {
 				neighbors = append(neighbors, n)

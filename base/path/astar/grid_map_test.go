@@ -26,6 +26,7 @@ func TestGridMap_Load(t *testing.T) {
 		t.Logf("没有找到路")
 		return
 	}
+	// 寻路得到的路点顺序是倒过来的
 	for i := 0; i < len(pathList); i++ {
 		t.Logf(fmt.Sprintf("寻到的路点:%v\n", pathList[i]))
 	}
