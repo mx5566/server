@@ -24,7 +24,6 @@ func TestMongo(t *testing.T) {
 	if err != nil {
 		log.Fatalf("%s", err)
 		return
-
 	}
 
 	//设置使用的库和表
