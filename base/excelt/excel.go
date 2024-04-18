@@ -6,20 +6,12 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/mx5566/logm"
 	"log"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 )
-
-// 加载table
-func init() {
-	//Load()
-}
-
-func LoadExcel(path string) {
-
-}
 
 func compressStr(str string) string {
 	if str == "" {
@@ -69,7 +61,90 @@ func CombineKeysEx(keys []interface{}) string {
 	return strings.Join(com, "_")
 }
 
-func Read(fileName string, keys ...string) map[interface{}][]byte {
+type TableHeader struct {
+	TableName     string            // 表的文件名字 没有后缀
+	PrimaryKey    []string          // 查表的主键
+	FieldNameType map[string]string // key是表的字段名字,value是字段的类型
+}
+
+// 读取表所有表的基本结构,用来自动生成代码
+func ReadBase(fileName string) *TableHeader {
+	f, err := excelize.OpenFile(fileName)
+	if err != nil {
+		logm.ErrorfE(err.Error())
+		return nil
+	}
+
+	var mapFieldNames = make(map[string]string)
+	var sliceFieldNames = []string{}
+	tableHeader := &TableHeader{
+		PrimaryKey:    []string{},
+		FieldNameType: make(map[string]string),
+	}
+	// 第一行算是一种注释
+	rows := f.GetRows("Sheet1")
+	for index, row := range rows {
+		if index == 0 {
+			for _, colCell := range row {
+				if colCell == "" {
+					log.Panic("fileName " + fileName + " has field empty 0!!!")
+				}
+				//fmt.Print(colCell)
+				mapFieldNames[colCell] = colCell
+			}
+			continue
+		}
+
+		// 第二行是字段名字
+		if index == 1 {
+			for _, colCell := range row {
+				if colCell == "" {
+					log.Panic("fileName " + fileName + " has field empty 1!!!")
+				}
+				sliceFieldNames = append(sliceFieldNames, colCell)
+			}
+			continue
+		}
+
+		// 查找表的唯一字段指定
+		if index == 2 {
+			for key, colCell := range row {
+				if colCell == "" {
+					continue
+				}
+				// 存储所有的主键
+				tableHeader.PrimaryKey = append(tableHeader.PrimaryKey, sliceFieldNames[key])
+
+			}
+			continue
+		}
+
+		// 字段的类型
+		if index == 3 {
+			for key, colCell := range row {
+				if colCell == "" {
+					log.Panic("fileName " + fileName + " has field empty 1!!!")
+				}
+
+				tableHeader.FieldNameType[sliceFieldNames[key]] = colCell
+			}
+		}
+
+		if index > 3 {
+			break
+		}
+	}
+
+	fileName = filepath.Base(fileName)
+	rets := strings.Split(fileName, ".")
+	if len(rets) >= 2 {
+		fileName = rets[0]
+	}
+	tableHeader.TableName = fileName
+	return tableHeader
+}
+
+func Read(fileName string) map[interface{}][]byte {
 	f, err := excelize.OpenFile(fileName)
 	if err != nil {
 		println(err.Error())
@@ -78,10 +153,6 @@ func Read(fileName string, keys ...string) map[interface{}][]byte {
 
 	// 找出key
 	mapKeys := make(map[string]interface{})
-	for _, value := range keys {
-		fmt.Println(value)
-		mapKeys[value] = value
-	}
 
 	var mapFields = make(map[interface{}]map[string]interface{})
 	var mapFieldsBytes = make(map[interface{}][]byte)
@@ -115,8 +186,19 @@ func Read(fileName string, keys ...string) map[interface{}][]byte {
 			continue
 		}
 
-		// 第三行是数据类型
 		if index == 2 {
+			for key, colCell := range row {
+				if colCell == "" {
+					continue
+				}
+				// 存储所有的主键
+				mapKeys[sliceFieldNames[key]] = sliceFieldNames[key]
+			}
+			continue
+		}
+
+		// 第三行是数据类型
+		if index == 3 {
 			for _, colCell := range row {
 				if colCell == "" {
 					log.Panic("fileName " + fileName + " has field empty 2!!!")
@@ -186,7 +268,7 @@ func ListFileFunc(p []string) {
 	for index, value := range p {
 		fmt.Println("Index = ", index, " Value = ", value)
 		if index == 0 {
-			Read(value, "ID")
+			Read(value)
 		}
 	}
 }
