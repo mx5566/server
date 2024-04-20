@@ -102,7 +102,7 @@ func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config rpc3.EtcdCon
 	c.InitNats(natsConfig)
 
 	if c.natsClient != nil {
-		top := fmt.Sprintf("%s%s/%d", base.ServiceName, c.ClusterInfo.GetServiceType().String(), c.ClusterInfo.Id())
+		top := c.ClusterInfo.GetTopicServerID()
 		logm.DebugfE("订阅的主题1: %s", top)
 		c.natsClient.Subscribe(top, func(msg *nats.Msg) {
 			packet := rpc3.Packet{
@@ -113,7 +113,7 @@ func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config rpc3.EtcdCon
 			c.HandlePacket(packet)
 		})
 
-		top = fmt.Sprintf("%s%s", base.ServiceName, c.ClusterInfo.GetServiceType().String())
+		top = c.ClusterInfo.GetTopicServerType()
 		logm.DebugfE("订阅的主题2: %s", top)
 
 		c.natsClient.Subscribe(top, func(msg *nats.Msg) {
