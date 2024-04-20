@@ -13,20 +13,19 @@ var GAccountMgr = New()
 
 type AccountMgr struct {
 	entity.Entity
+	cluster.ModuleAgent
 }
 
 func New() *AccountMgr {
 	a := &AccountMgr{}
-
-	a.Init()
-
 	return a
 }
 
 func (m *AccountMgr) Init() {
 	m.Entity.Init()
-	m.Entity.Start()
 	entity.RegisterEntity(m)
+	m.Entity.Start()
+	m.ModuleAgent.Init(rpc3.ModuleType_AccountMgr)
 }
 
 func (m *AccountMgr) RegisterAccount() {

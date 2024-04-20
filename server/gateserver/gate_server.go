@@ -4,13 +4,23 @@ import (
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/base/cluster"
+	"github.com/mx5566/server/base/conf"
 	"github.com/mx5566/server/base/network"
 	"github.com/mx5566/server/base/rpc3"
 )
 
+type Config struct {
+	conf.DB          `yaml:"DB"`
+	conf.Server      `yaml:"gate"`
+	conf.ModuleEtcd  `yaml:"moduleetcd"`
+	conf.ServiceEtcd `yaml:"etcd"`
+	conf.Nats        `yaml:"nats"`
+	conf.ModuleP     `yaml:"module"`
+}
+
 type GateServer struct {
-	s    *network.ServerSocket
-	pMgr *PlayerMgr
+	s      *network.ServerSocket
+	config Config
 }
 
 var SERVER GateServer
@@ -20,10 +30,12 @@ func (gs *GateServer) GetServer() *network.ServerSocket {
 }
 
 func (gs *GateServer) Init() {
+	conf.ReadConf("./config.yaml", &gs.config)
+
 	// 日志初始化
 	logm.Init("gateserver", map[string]string{"errFile": "gate_server.log", "logFile": "gate_server_error.log"}, "debug")
 	s := new(network.ServerSocket)
-	s.Init("0.0.0.0", 8080)
+	s.Init(gs.config.Server.Ip, gs.config.Server.Port)
 
 	session := new(ClientSession)
 	session.Init()
@@ -34,36 +46,31 @@ func (gs *GateServer) Init() {
 	gs.s = s
 
 	cluster.GCluster.InitCluster(&rpc3.ClusterInfo{
-		Ip:          "0.0.0.0",
-		Port:        8080,
+		Ip:          gs.config.Server.Ip,
+		Port:        uint32(gs.config.Server.Port),
 		ServiceType: rpc3.ServiceType_GateServer,
-	}, rpc3.EtcdConfig{
-		EndPoints: []string{"127.0.0.1:2379"},
-		TimeNum:   10,
-	}, rpc3.NatsConfig{
-		EndPoints: []string{"127.0.0.1:4222"},
-	})
+	}, gs.config.ServiceEtcd, gs.config.Nats)
+
 	cluster.GCluster.BindPacketFunc(HandleMsg)
 
-	// 初始化playerMGr
-	gs.pMgr = new(PlayerMgr)
-	gs.pMgr.Init()
+	gs.InitMgr()
 
 	n := new(ClusterMsg)
 	n.Init()
 
 	pr := new(base.Pprof)
 	pr.Init()
+
+}
+
+func (gs *GateServer) InitMgr() {
+	// 初始化playerMGr
+	PLAYERMGR.Init()
 }
 
 // 可以用IP+PORT 求一个哈希值
 func (gs *GateServer) GetID() uint32 {
 	return cluster.GCluster.ClusterInfo.Id()
-}
-
-func (gs *GateServer) GetPlayerMgr() *PlayerMgr {
-
-	return gs.pMgr
 }
 
 func (gs *GateServer) SendToClient(rpcPacket rpc3.RpcPacket) {

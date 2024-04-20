@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
+	"github.com/mx5566/server/base/conf"
 	"github.com/mx5566/server/base/entity"
 	"github.com/mx5566/server/base/rpc3"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -19,19 +20,19 @@ type ServiceDiscovery struct {
 	client *clientv3.Client
 }
 
-func NewServiceDiscovery(config rpc3.EtcdConfig) *ServiceDiscovery {
+func NewServiceDiscovery(config conf.ServiceEtcd) *ServiceDiscovery {
 	s := &ServiceDiscovery{}
 	s.Init(config)
 
 	return s
 }
 
-func (sd *ServiceDiscovery) Init(config rpc3.EtcdConfig) {
+func (sd *ServiceDiscovery) Init(config conf.ServiceEtcd) {
 	client, err := clientv3.New(clientv3.Config{
-		Endpoints: config.GetEndPoints(),
+		Endpoints: config.EndPoints,
 	})
 	if err != nil {
-		logm.PanicfE("连接etcd3服务器失败:%v, 原因: %s\n", config.GetEndPoints(), err.Error())
+		logm.PanicfE("连接etcd3服务器失败:%v, 原因: %s\n", config.EndPoints, err.Error())
 		return
 	}
 

@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
+	"github.com/mx5566/server/base/conf"
 	"github.com/mx5566/server/base/entity"
 	"github.com/mx5566/server/base/etcd3"
 	"github.com/mx5566/server/base/network"
@@ -21,6 +22,26 @@ var GCluster Cluster
 
 const ServerTypeMax = int(rpc3.ServiceType_WorldServer) + 1
 
+type OP struct {
+	Module     conf.ModuleP
+	ModuleEtcd conf.ModuleEtcd
+}
+
+type OpOption func(op *OP)
+
+func (o *OP) Apply(option ...OpOption) {
+	for _, v := range option {
+		v(o)
+	}
+}
+
+func WithModuleEtcd(etcd conf.ModuleEtcd, mo conf.ModuleP) OpOption {
+	return func(op *OP) {
+		op.ModuleEtcd = etcd
+		op.Module = mo
+	}
+}
+
 type Cluster struct {
 	entity.Entity
 	*rpc3.ClusterInfo
@@ -30,8 +51,12 @@ type Cluster struct {
 	serviceRegister  *etcd3.ServiceRegister
 	serviceDiscovery *etcd3.ServiceDiscovery
 
+	// nats client
 	natsClient *nats.Conn
 	handleFunc network.HandleFunc
+
+	moduleMgr ModuleMgr
+	moduleP   conf.ModuleP
 }
 
 func (c *Cluster) SendMsg(head *rpc3.RpcHead, funcName string, param ...interface{}) {
@@ -82,7 +107,7 @@ func (c *Cluster) RandomClusterByType(serviceType rpc3.ServiceType) *rpc3.Cluste
 
 }
 
-func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config rpc3.EtcdConfig, natsConfig rpc3.NatsConfig) {
+func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config conf.ServiceEtcd, natsConfig conf.Nats, params ...OpOption) {
 	c.ClusterInfo = clusterInfo
 
 	for i := 0; i < ServerTypeMax; i++ {
@@ -94,10 +119,15 @@ func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config rpc3.EtcdCon
 
 	entity.RegisterEntity(c)
 
+	op := OP{}
+	op.Apply(params...)
+
 	// 服务的注册
 	c.serviceRegister = etcd3.NewServiceRegister(clusterInfo, config)
 	//服务的发现
 	c.serviceDiscovery = etcd3.NewServiceDiscovery(config)
+
+	c.moduleMgr.Init(config.EndPoints, config.GrantTime)
 
 	c.InitNats(natsConfig)
 
@@ -126,6 +156,11 @@ func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config rpc3.EtcdCon
 		})
 	}
 
+	if len(op.ModuleEtcd.EndPoints) > 0 {
+		c.moduleMgr.Init(op.ModuleEtcd.EndPoints, op.ModuleEtcd.GrantTime)
+		c.moduleP = op.Module
+	}
+
 }
 
 func (c *Cluster) BindPacketFunc(hFunc network.HandleFunc) {
@@ -136,7 +171,7 @@ func (c *Cluster) HandlePacket(packet rpc3.Packet) {
 	c.handleFunc(packet)
 }
 
-func (c *Cluster) InitNats(natsConfig rpc3.NatsConfig) {
+func (c *Cluster) InitNats(natsConfig conf.Nats) {
 	ops := []nats.Option{}
 
 	op := nats.DisconnectErrHandler(func(conn *nats.Conn, err error) {
@@ -156,7 +191,7 @@ func (c *Cluster) InitNats(natsConfig rpc3.NatsConfig) {
 	})
 	ops = append(ops, op)
 
-	url := strings.Join(natsConfig.GetEndPoints(), ",")
+	url := strings.Join(natsConfig.EndPoints, ",")
 
 	connect, err := nats.Connect(url, ops...)
 	if err != nil {
@@ -180,4 +215,19 @@ func (c *Cluster) DelClusterNode(ctx context.Context, info *rpc3.ClusterInfo) {
 	c.clusterMutex.Lock()
 	delete(c.clusterMap[info.GetServiceType()], info.Id())
 	c.clusterMutex.Unlock()
+}
+
+func (c *Cluster) IsEnough(t rpc3.ModuleType) bool {
+	n := c.GetModuleMax(t)
+	c1 := c.moduleMgr.GetModuleNum(t)
+	return c1 >= int(n)
+
+}
+
+func (c *Cluster) GetModuleMax(t rpc3.ModuleType) int64 {
+	if _, ok := c.moduleP.ModuleCount[t.String()]; ok {
+		return c.moduleP.ModuleCount[t.String()]
+	}
+
+	return 0
 }

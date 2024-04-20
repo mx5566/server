@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
+	"github.com/mx5566/server/base/conf"
 	"github.com/mx5566/server/base/rpc3"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
@@ -21,17 +22,17 @@ type ServiceRegister struct {
 	status    int // 0  1
 }
 
-func NewServiceRegister(clusterInfo *rpc3.ClusterInfo, config rpc3.EtcdConfig) *ServiceRegister {
+func NewServiceRegister(clusterInfo *rpc3.ClusterInfo, config conf.ServiceEtcd) *ServiceRegister {
 	s := &ServiceRegister{}
-	s.Init(clusterInfo, config.GetEndPoints(), config.GetTimeNum())
+	s.Init(clusterInfo, config.EndPoints, config.GrantTime)
 
 	return s
 }
 
 func (r *ServiceRegister) Init(clusterInfo *rpc3.ClusterInfo, endPoints []string, timeNum int64) {
 	conf := clientv3.Config{
-		Endpoints:   endPoints,
-		DialTimeout: 5 * time.Second,
+		Endpoints: endPoints,
+		//DialTimeout: 5 * time.Second,
 	}
 
 	client, err := clientv3.New(conf)
@@ -72,8 +73,6 @@ func (r *ServiceRegister) SetLease() {
 
 	// 进入续约状态
 	r.status = 1
-
-	//logm.DebugfE("设置lease 成功\n")
 }
 
 func (r *ServiceRegister) KeepAlive() {
@@ -84,10 +83,8 @@ func (r *ServiceRegister) KeepAlive() {
 		return
 	}
 
-	//logm.DebugfE("续租keepalive成功\n")
-
 	// 避免cpu忙
-	time.Sleep(3 * time.Second)
+	time.Sleep(time.Duration(r.timeGrant / 2))
 }
 
 // 监听 续租情况

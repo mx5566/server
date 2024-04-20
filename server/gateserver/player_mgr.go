@@ -16,6 +16,8 @@ type Player struct {
 	State        base.LoginState // 登录状态
 }
 
+var PLAYERMGR PlayerMgr
+
 // 管理所有登录的玩家
 type PlayerMgr struct {
 	entity.Entity

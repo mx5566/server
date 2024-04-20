@@ -19,7 +19,14 @@ const (
 	Send_Login
 )
 
+// 服务器注册的前缀
 const ServiceName = "Server/"
+
+// 模块注册的前缀
+const ModuleNameDir = "Module/"
+
+// 对象注册的前缀
+const ObjectDir = "Object/"
 
 const (
 	Json = ".json"

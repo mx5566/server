@@ -53,3 +53,17 @@ enum SendType {
     SendType_BroadCast = 1;
     SendType_Local = 2;
 }
+
+
+//模块类型
+enum ModuleType {
+    AccountMgr  = 0; //登录
+    ChatMgr     = 1; //聊天
+    END         = 2;
+}
+
+message Module  {
+    ModuleType mType  = 1;  // 模块类型
+    uint32 ClusterID = 2;  // 所在的服务器的id
+    int64 ID = 3; // 模块的ID索引
+}
