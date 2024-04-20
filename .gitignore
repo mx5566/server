@@ -11,3 +11,4 @@ base/path/astar/layout.txt
 /base/path/astar/out.cpu
 
 test.bat
+/release/log
