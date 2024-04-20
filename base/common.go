@@ -7,7 +7,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"hash/crc32"
-	"log"
 	"reflect"
 	"runtime"
 	"strings"
@@ -51,7 +50,7 @@ func TraceCode(code ...interface{}) {
 		data += fmt.Sprintf("%v", v)
 	}
 	data += string(buf[:n])
-	log.Printf("==> %s\n", data)
+	logm.ErrorfE("==> %s", data)
 }
 
 func GetMessageName(msg proto.Message) string {

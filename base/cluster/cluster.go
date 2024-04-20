@@ -127,8 +127,6 @@ func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config conf.Service
 	//服务的发现
 	c.serviceDiscovery = etcd3.NewServiceDiscovery(config)
 
-	c.moduleMgr.Init(config.EndPoints, config.GrantTime)
-
 	c.InitNats(natsConfig)
 
 	if c.natsClient != nil {
@@ -208,13 +206,16 @@ func (c *Cluster) AddClusterNode(ctx context.Context, info *rpc3.ClusterInfo) {
 	c.clusterMap[info.GetServiceType()][info.Id()] = info
 	c.clusterMutex.Unlock()
 
-	logm.InfofE("增加集群信息: %v", c.clusterMap)
+	logm.InfofE("增加集群信息: %v", info)
 }
 
 func (c *Cluster) DelClusterNode(ctx context.Context, info *rpc3.ClusterInfo) {
 	c.clusterMutex.Lock()
 	delete(c.clusterMap[info.GetServiceType()], info.Id())
 	c.clusterMutex.Unlock()
+
+	logm.InfofE("移除集群信息: %v", info)
+
 }
 
 func (c *Cluster) IsEnough(t rpc3.ModuleType) bool {

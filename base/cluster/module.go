@@ -48,7 +48,7 @@ func (m *ModuleMgr) Init(endPoints []string, t int64) {
 
 // 模块的发现
 func (m *ModuleMgr) Run() {
-	watchChan := m.client.Watch(context.Background(), base.ServiceName, clientv3.WithPrefix())
+	watchChan := m.client.Watch(context.Background(), base.ModuleNameDir, clientv3.WithPrefix())
 	for watchResp := range watchChan {
 		for _, event := range watchResp.Events {
 			switch event.Type.String() {
@@ -80,7 +80,7 @@ func (m *ModuleMgr) AddModule(data []byte) {
 	m.moduleAgents[module.MType][module.GetID()] = module
 	m.moduleMutex[module.MType].Unlock()
 
-	logm.DebugfE("模块服务增加模块成功:%s", module.String())
+	logm.DebugfE("模块服务增加新模块成功:type:%s, ID:%d, clusterID:%d", module.MType.String(), module.ID, module.ClusterID)
 }
 
 func (m *ModuleMgr) DelModule(data []byte) {
@@ -100,8 +100,7 @@ func (m *ModuleMgr) DelModule(data []byte) {
 	delete(m.moduleAgents[module.MType], module.GetID())
 	m.moduleMutex[module.MType].Unlock()
 
-	logm.DebugfE("模块服务删除模块成功:%s", module.String())
-
+	logm.DebugfE("模块服务删除模块成功:type:%s, ID:%d, clusterID:%d", module.MType.String(), module.ID, module.ClusterID)
 }
 
 func (m *ModuleMgr) GetModuleNum(t rpc3.ModuleType) int {
@@ -124,19 +123,27 @@ func (m *ModuleMgr) Register(module *rpc3.Module, agent *ModuleAgent) bool {
 
 	key := base.ModuleNameDir + module.MType.String() + "/" + fmt.Sprintf("%d", module.ID)
 	val, _ := json.Marshal(module)
+	//logm.DebugfE("1-------------------------------")
 
 	tx := m.client.Txn(context.Background())
+	//logm.DebugfE("2-------------------------------")
 
 	// CAS
-	tx.If(clientv3.Compare(clientv3.CreateRevision(key), "=", 0))
-	tx.Then(clientv3.OpPut(key, string(val), clientv3.WithLease(leaseResp.ID)))
-	tx.Else()
+	tx.If(clientv3.Compare(clientv3.CreateRevision(key), "=", 0)).Then(clientv3.OpPut(key, string(val), clientv3.WithLease(leaseResp.ID))).Else()
+	//logm.DebugfE("3-------------------------------")
 
-	_, err = tx.Commit()
+	resp, err := tx.Commit()
 	if err != nil {
-		logm.ErrorE("etcd3注册模块事务失败: %s %s", err.Error(), module.String())
+		logm.ErrorE("etcd3提交模块事务失败: %s %s", err.Error(), module.String())
 		return false
 	}
+
+	if !resp.Succeeded {
+		logm.ErrorE("etcd3提交模块事务处理失败: %s %s", err.Error(), module.String())
+		return false
+	}
+
+	//logm.DebugfE("4-------------------------------")
 
 	return true
 }

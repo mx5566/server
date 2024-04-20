@@ -34,12 +34,13 @@ func (a *ModuleAgent) Init(t rpc3.ModuleType) {
 
 func (a *ModuleAgent) RegisterAgent() {
 	a.module.ID = (a.module.ID) % GCluster.GetModuleMax(a.module.MType)
+
 	if GCluster.moduleMgr.Register(&a.module, a) {
 		// 注册成功
 		a.status = AgentStatus_Lease
 
 		entity.GEntityMgr.SendMsg(rpc3.RpcHead{}, fmt.Sprintf("%s.OnModuleRegister", a.module.MType.String()))
-		logm.DebugfE("模块注册成功: %s %d %s", a.module.MType.String(), a.module.ID, a.module.String())
+		logm.DebugfE("模块注册成功: type:%s, ID:%d, clusterID:%s", a.module.MType.String(), a.module.ID, a.module.String())
 
 		time.Sleep(time.Duration(GCluster.moduleMgr.timeGrant / 3))
 	} else if GCluster.IsEnough(a.module.MType) {
@@ -69,15 +70,17 @@ func (a *ModuleAgent) Idle() {
 }
 
 func (a *ModuleAgent) RunAgent() {
-	switch a.status {
-	case AgentStatus_Idle:
-		a.Idle()
-	case AgentStatus_Register:
-		a.RegisterAgent()
-	case AgentStatus_Lease:
-		a.Lease()
-	}
+	for {
+		switch a.status {
+		case AgentStatus_Idle:
+			a.Idle()
+		case AgentStatus_Register:
+			a.RegisterAgent()
+		case AgentStatus_Lease:
+			a.Lease()
+		}
 
-	// 暂停100毫秒
-	time.Sleep(time.Millisecond * 100)
+		// 暂停100毫秒
+		time.Sleep(time.Millisecond * 100)
+	}
 }
