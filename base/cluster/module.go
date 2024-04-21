@@ -22,7 +22,8 @@ type ModuleMgr struct {
 
 func (m *ModuleMgr) Init(endPoints []string, t int64) {
 	conf := clientv3.Config{
-		Endpoints: endPoints,
+		Endpoints:         endPoints,
+		DialKeepAliveTime: 10,
 		//DialTimeout: time.Duration(t) * time.Second,
 	}
 
@@ -48,14 +49,20 @@ func (m *ModuleMgr) Init(endPoints []string, t int64) {
 
 // 模块的发现
 func (m *ModuleMgr) Run() {
-	watchChan := m.client.Watch(context.Background(), base.ModuleNameDir, clientv3.WithPrefix())
+	watchChan := m.client.Watch(context.Background(), base.ModuleNameDir, clientv3.WithPrefix(), clientv3.WithPrevKV())
+
+	m.GetAll()
 	for watchResp := range watchChan {
 		for _, event := range watchResp.Events {
 			switch event.Type.String() {
 			case "PUT":
 				m.AddModule(event.Kv.Value)
 			case "DELETE":
-				m.DelModule(event.Kv.Value)
+				//logm.DebugfE("ModuleMgr Run DeleModule: %s %s cv:%d, mv:%d, vv:%d, ls: %d",
+				//	string(event.Kv.Key), string(event.Kv.Value),
+				//	event.Kv.CreateRevision, event.Kv.ModRevision,
+				//	event.Kv.Version, event.Kv.Lease)
+				m.DelModule(event.PrevKv.Value)
 			}
 		}
 	}
@@ -63,16 +70,29 @@ func (m *ModuleMgr) Run() {
 	return
 }
 
+func (m *ModuleMgr) GetAll() {
+	resp, err := m.client.Get(context.Background(), base.ModuleNameDir, clientv3.WithPrefix())
+	if err != nil {
+		return
+	}
+	i := 0
+	for _, kv := range resp.Kvs {
+		i++
+		logm.ErrorE("++++++++++++++++++", i, " ---- ", kv.Lease)
+		m.AddModule(kv.Value)
+	}
+}
+
 func (m *ModuleMgr) AddModule(data []byte) {
 	module := &rpc3.Module{}
 	err := json.Unmarshal(data, module)
 	if err != nil {
-		logm.ErrorfE("模块的发现数据解析失败:%s", err.Error())
+		logm.ErrorfE("增加模块的发现数据解析失败:%s %s", err.Error(), string(data))
 		return
 	}
 
 	if module.MType < rpc3.ModuleType_AccountMgr || module.MType >= rpc3.ModuleType_END {
-		logm.ErrorfE("模块的发现服务类型错误:%d", module.MType)
+		logm.ErrorfE("增加模块的发现服务类型错误:%d", module.MType)
 		return
 	}
 
@@ -87,12 +107,12 @@ func (m *ModuleMgr) DelModule(data []byte) {
 	module := &rpc3.Module{}
 	err := json.Unmarshal(data, module)
 	if err != nil {
-		logm.ErrorfE("模块的发现数据解析失败:%s", err.Error())
+		logm.ErrorfE("删除模块的发现数据解析失败:%s", err.Error())
 		return
 	}
 
 	if module.MType < rpc3.ModuleType_AccountMgr || module.MType >= rpc3.ModuleType_END {
-		logm.ErrorfE("模块的发现服务类型错误:%d", module.MType)
+		logm.ErrorfE("删除模块的发现服务类型错误:%d", module.MType)
 		return
 	}
 
@@ -123,27 +143,25 @@ func (m *ModuleMgr) Register(module *rpc3.Module, agent *ModuleAgent) bool {
 
 	key := base.ModuleNameDir + module.MType.String() + "/" + fmt.Sprintf("%d", module.ID)
 	val, _ := json.Marshal(module)
-	//logm.DebugfE("1-------------------------------")
 
 	tx := m.client.Txn(context.Background())
-	//logm.DebugfE("2-------------------------------")
 
 	// CAS
+	logm.DebugfE("提交事务的数据:%s, %s", key, string(val))
 	tx.If(clientv3.Compare(clientv3.CreateRevision(key), "=", 0)).Then(clientv3.OpPut(key, string(val), clientv3.WithLease(leaseResp.ID))).Else()
-	//logm.DebugfE("3-------------------------------")
 
 	resp, err := tx.Commit()
 	if err != nil {
-		logm.ErrorE("etcd3提交模块事务失败: %s %s", err.Error(), module.String())
+		logm.ErrorfE("etcd3提交模块事务失败: %s %s", err.Error(), module.String())
 		return false
 	}
 
 	if !resp.Succeeded {
-		logm.ErrorE("etcd3提交模块事务处理失败: %s %s", err.Error(), module.String())
+		logm.ErrorfE("etcd3提交模块事务处理失败: %s %d %d", module.MType.String(), module.ID, module.ClusterID)
 		return false
 	}
 
-	//logm.DebugfE("4-------------------------------")
+	logm.DebugfE("事务提交数据: %s %d %d", module.MType.String(), module.ID, module.ClusterID)
 
 	return true
 }
@@ -154,6 +172,8 @@ func (m *ModuleMgr) Lease(agent *ModuleAgent) bool {
 		logm.ErrorfE("etcd moudle lease KeepAliveOnce error: %s \n", err.Error())
 		return false
 	}
+
+	//logm.DebugfE("ModuleMgr lease:%d  %d", resp.ID, agent.leaseID)
 
 	return true
 }

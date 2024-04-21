@@ -63,3 +63,7 @@ func (m *AccountMgr) LoginAccountRequest(ctx context.Context, msg *pb.LoginAccou
 	})
 
 }
+
+func (m *AccountMgr) OnModuleRegister() {
+	logm.DebugfE("AccountMgr.OnModuleRegister----------------")
+}
