@@ -26,6 +26,8 @@ type GameServer struct {
 var SERVER GameServer
 
 func (gs *GameServer) Init() {
+	conf.ReadConf("./config.yaml", &gs.config)
+
 	// 日志初始化
 	logm.Init("gameserver", map[string]string{"errFile": "game_server.log", "logFile": "game_server_error.log"}, "debug")
 	gs.TestLoadTable()

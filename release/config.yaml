@@ -24,12 +24,16 @@ gate:
 etcd:
   endpoints:
     - http://127.0.0.1:2379
+    - http://127.0.0.1:3379
+    - http://127.0.0.1:4379
   granttime: 30
 
 # module object同步
 moduleetcd:
   endpoints:
     - http://127.0.0.1:2379
+    - http://127.0.0.1:3379
+    - http://127.0.0.1:4379
   granttime: 30
 
 

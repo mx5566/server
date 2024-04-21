@@ -23,12 +23,12 @@ type Server struct {
 
 type ServiceEtcd struct {
 	EndPoints []string `yaml:"endpoints"`
-	GrantTime int64    `yaml:"grantTime"`
+	GrantTime int64    `yaml:"granttime"`
 }
 
 type ModuleEtcd struct {
 	EndPoints []string `yaml:"endpoints"`
-	GrantTime int64    `yaml:"grantTime"`
+	GrantTime int64    `yaml:"granttime"`
 }
 
 type Nats struct {
