@@ -3,7 +3,6 @@ package etcd3
 import (
 	"context"
 	"encoding/json"
-	"github.com/golang/protobuf/proto"
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/base/conf"
@@ -37,8 +36,8 @@ func (sd *ServiceDiscovery) Init(config conf.ServiceEtcd) {
 	}
 
 	sd.client = client
+
 	sd.Start()
-	sd.DiscoverServices()
 }
 
 func (sd *ServiceDiscovery) Start() {
@@ -51,6 +50,11 @@ func (sd *ServiceDiscovery) DiscoverServices() error {
 	if err != nil {
 		return err
 	}
+
+	//var buf [4096]byte
+	//n := runtime.Stack(buf[:], false)
+	//fmt.Printf("==> %s", string(buf[:n]))
+
 	for _, kv := range resp.Kvs {
 		sd.AddServiceNode(kv.Value)
 	}
@@ -59,14 +63,19 @@ func (sd *ServiceDiscovery) DiscoverServices() error {
 
 // 监听
 func (sd *ServiceDiscovery) WatchServices() error {
-	watchChan := sd.client.Watch(context.Background(), base.ServiceName, clientv3.WithPrefix())
+	watchChan := sd.client.Watch(context.Background(), base.ServiceName, clientv3.WithPrefix(), clientv3.WithPrevKV())
+	sd.DiscoverServices()
 	for watchResp := range watchChan {
 		for _, event := range watchResp.Events {
 			switch event.Type.String() {
 			case "PUT":
 				sd.AddServiceNode(event.Kv.Value)
 			case "DELETE":
-				sd.DeleteServiceNode(event.Kv.Value)
+				//logm.DebugfE("ServiceDiscovery WatchServices DeleModule: %s %s cv:%d, mv:%d, vv:%d, ls: %d",
+				//	string(event.Kv.Key), string(event.Kv.Value),
+				//	event.Kv.CreateRevision, event.Kv.ModRevision,
+				//	event.Kv.Version, event.Kv.Lease)
+				sd.DeleteServiceNode(event.PrevKv.Value)
 			}
 		}
 	}
@@ -89,8 +98,12 @@ func (sd *ServiceDiscovery) AddServiceNode(by []byte) {
 func (sd *ServiceDiscovery) DeleteServiceNode(by []byte) {
 	clsterInfo := rpc3.ClusterInfo{}
 
-	err := proto.Unmarshal(by, &clsterInfo)
+	err := json.Unmarshal(by, &clsterInfo)
 	if err != nil {
+		logm.ErrorfE("服务发现注册删除服务节点: %v", clsterInfo)
 		return
 	}
+
+	entity.GEntityMgr.SendMsg(rpc3.RpcHead{}, "Cluster.DelClusterNode", clsterInfo)
+
 }

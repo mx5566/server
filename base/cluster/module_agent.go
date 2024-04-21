@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base/entity"
@@ -33,7 +34,7 @@ func (a *ModuleAgent) Init(t rpc3.ModuleType) {
 }
 
 func (a *ModuleAgent) RegisterAgent() {
-	a.module.ID = (a.module.ID) % GCluster.GetModuleMax(a.module.MType)
+	a.module.ID = (a.module.ID + 1) % GCluster.GetModuleMax(a.module.MType)
 
 	if GCluster.moduleMgr.Register(&a.module, a) {
 		// 注册成功
@@ -52,11 +53,16 @@ func (a *ModuleAgent) Lease() {
 	if !GCluster.moduleMgr.Lease(a) {
 		a.status = AgentStatus_Idle
 
+		d, err := json.Marshal(a.module)
+		if err == nil {
+			GCluster.moduleMgr.DelModule(d)
+		}
+
 		entity.GEntityMgr.SendMsg(rpc3.RpcHead{}, fmt.Sprintf("%s.OnModuleUnRegister", a.module.MType.String()))
 		logm.DebugfE("模块续约失败: %s %d %s", a.module.MType.String(), a.module.ID, a.module.String())
 	} else {
 		// 避免cpu忙
-		time.Sleep(time.Duration(GCluster.moduleMgr.timeGrant / 3))
+		time.Sleep(time.Duration(GCluster.moduleMgr.timeGrant/3) * time.Second)
 	}
 }
 
@@ -66,11 +72,14 @@ func (a *ModuleAgent) Idle() {
 		return
 	}
 
+	logm.DebugfE("获取模块的数量:%d", GCluster.moduleMgr.GetModuleNum(rpc3.ModuleType_AccountMgr))
+
 	a.status = AgentStatus_Register
 }
 
 func (a *ModuleAgent) RunAgent() {
 	for {
+		//time.Sleep(time.Second * 10)
 		switch a.status {
 		case AgentStatus_Idle:
 			a.Idle()
@@ -81,6 +90,6 @@ func (a *ModuleAgent) RunAgent() {
 		}
 
 		// 暂停100毫秒
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 200)
 	}
 }

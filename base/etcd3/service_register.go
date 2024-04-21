@@ -31,7 +31,8 @@ func NewServiceRegister(clusterInfo *rpc3.ClusterInfo, config conf.ServiceEtcd) 
 
 func (r *ServiceRegister) Init(clusterInfo *rpc3.ClusterInfo, endPoints []string, timeNum int64) {
 	conf := clientv3.Config{
-		Endpoints: endPoints,
+		Endpoints:         endPoints,
+		DialKeepAliveTime: 10,
 		//DialTimeout: 5 * time.Second,
 	}
 
@@ -82,9 +83,11 @@ func (r *ServiceRegister) KeepAlive() {
 		logm.ErrorfE("etcd lease KeepAliveOnce error: %s \n", err.Error())
 		return
 	}
+	//logm.DebugfE("KeepAlive lease:%d  %d", resp.ID, r.leaseID)
 
+	//logm.DebugfE("KeepAlive: %d", r.timeGrant)
 	// 避免cpu忙
-	time.Sleep(time.Duration(r.timeGrant / 2))
+	time.Sleep(time.Duration(r.timeGrant/2) * time.Second)
 }
 
 // 监听 续租情况
