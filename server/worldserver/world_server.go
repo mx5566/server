@@ -29,7 +29,7 @@ func (gs *WorldServer) Init() {
 	conf.ReadConf("./config.yaml", &gs.config)
 
 	// 日志初始化
-	logm.Init("worldserver", map[string]string{"errFile": "world_server.log", "logFile": "world_server_error.log"}, "debug")
+	logm.Init("worldserver", map[string]string{"errFile": "world_server_error.log", "logFile": "world_server.log"}, "debug")
 	s := new(network.ServerSocket)
 	s.Init(gs.config.Server.Ip, gs.config.Server.Port)
 	s.Start()

@@ -52,7 +52,7 @@ func (s *ServerSocket) Start() bool {
 
 	go s.Run()
 
-	go fmt.Println("Start server ok...")
+	fmt.Println("Start server ok...")
 
 	return true
 }
