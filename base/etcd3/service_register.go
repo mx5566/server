@@ -33,7 +33,7 @@ func (r *ServiceRegister) Init(clusterInfo *rpc3.ClusterInfo, endPoints []string
 	conf := clientv3.Config{
 		Endpoints:         endPoints,
 		DialKeepAliveTime: 10,
-		//DialTimeout: 5 * time.Second,
+		DialTimeout:       5 * time.Second,
 	}
 
 	client, err := clientv3.New(conf)
@@ -68,7 +68,7 @@ func (r *ServiceRegister) SetLease() {
 	val, _ := json.Marshal(r.info)
 	_, err = r.client.Put(context.Background(), key, string(val), clientv3.WithLease(r.leaseID))
 	if err != nil {
-		logm.ErrorfE("etcd lease Put error: %s \n", err.Error())
+		logm.ErrorfE("service register etcd lease Put error: %s \n", err.Error())
 		return
 	}
 
@@ -80,7 +80,7 @@ func (r *ServiceRegister) KeepAlive() {
 	_, err := r.lease.KeepAliveOnce(context.Background(), r.leaseID)
 	if err != nil {
 		r.status = 0
-		logm.ErrorfE("etcd lease KeepAliveOnce error: %s \n", err.Error())
+		logm.ErrorfE("集群服务器注册 续租 KeepAliveOnce error: %s \n", err.Error())
 		return
 	}
 	//logm.DebugfE("KeepAlive lease:%d  %d", resp.ID, r.leaseID)
@@ -101,5 +101,7 @@ func (r *ServiceRegister) Run() {
 		case 1:
 			r.KeepAlive()
 		}
+
+		time.Sleep(200 * time.Millisecond)
 	}
 }

@@ -94,7 +94,10 @@ func (c *Cluster) Send(packet rpc3.RpcPacket) {
 			buff, _ := proto.Marshal(&packet)
 			_ = c.natsClient.Publish(top, buff)
 		} else if head.DestServerType == rpc3.ServiceType_GameServer {
+			top := fmt.Sprintf("%s%s/%d", base.ServiceName, head.DestServerType.String(), head.DestServerID)
 
+			buff, _ := proto.Marshal(&packet)
+			_ = c.natsClient.Publish(top, buff)
 		}
 	case rpc3.SendType_SendType_BroadCast:
 		buff, _ := proto.Marshal(&packet)
@@ -107,28 +110,7 @@ func (c *Cluster) RandomClusterByType(serviceType rpc3.ServiceType) *rpc3.Cluste
 
 }
 
-func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config conf.ServiceEtcd, natsConfig conf.Nats, params ...OpOption) {
-	c.ClusterInfo = clusterInfo
-
-	for i := 0; i < ServerTypeMax; i++ {
-		c.clusterMap[i] = make(map[uint32]*rpc3.ClusterInfo)
-	}
-
-	c.Entity.Init()
-	c.Entity.Start()
-
-	entity.RegisterEntity(c)
-
-	op := OP{}
-	op.Apply(params...)
-
-	// 服务的注册
-	c.serviceRegister = etcd3.NewServiceRegister(clusterInfo, config)
-	//服务的发现
-	c.serviceDiscovery = etcd3.NewServiceDiscovery(config)
-
-	c.InitNats(natsConfig)
-
+func (c *Cluster) NatsSubscibe() {
 	if c.natsClient != nil {
 		top := c.ClusterInfo.GetTopicServerID()
 		logm.DebugfE("订阅的主题1: %s", top)
@@ -153,6 +135,29 @@ func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config conf.Service
 			c.HandlePacket(packet)
 		})
 	}
+}
+
+func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config conf.ServiceEtcd, natsConfig conf.Nats, params ...OpOption) {
+	c.ClusterInfo = clusterInfo
+
+	for i := 0; i < ServerTypeMax; i++ {
+		c.clusterMap[i] = make(map[uint32]*rpc3.ClusterInfo)
+	}
+
+	c.Entity.Init()
+	c.Entity.Start()
+
+	entity.RegisterEntity(c)
+
+	op := OP{}
+	op.Apply(params...)
+
+	// 服务的注册
+	c.serviceRegister = etcd3.NewServiceRegister(clusterInfo, config)
+	//服务的发现
+	c.serviceDiscovery = etcd3.NewServiceDiscovery(config)
+
+	c.InitNats(natsConfig)
 
 	if len(op.ModuleEtcd.EndPoints) > 0 {
 		c.moduleMgr.Init(op.ModuleEtcd.EndPoints, op.ModuleEtcd.GrantTime)
@@ -169,7 +174,7 @@ func (c *Cluster) HandlePacket(packet rpc3.Packet) {
 	c.handleFunc(packet)
 }
 
-func (c *Cluster) InitNats(natsConfig conf.Nats) {
+func (c *Cluster) InitNats(natsConfig conf.Nats) bool {
 	ops := []nats.Option{}
 
 	op := nats.DisconnectErrHandler(func(conn *nats.Conn, err error) {
@@ -183,10 +188,27 @@ func (c *Cluster) InitNats(natsConfig conf.Nats) {
 	})
 	ops = append(ops, op)
 
+	op = nats.MaxReconnects(600)
+
+	ops = append(ops, op)
+
 	op = nats.ReconnectHandler(func(conn *nats.Conn) {
 		logm.ErrorfE("nats reconnect")
 
+		c.NatsSubscibe()
 	})
+	ops = append(ops, op)
+
+	op = nats.ConnectHandler(func(conn *nats.Conn) {
+		logm.DebugfE("nats conn")
+
+		c.NatsSubscibe()
+
+		logm.InfofE("连接nats服务器成功url: %s", conn.ConnectedUrl())
+	})
+	ops = append(ops, op)
+
+	op = nats.RetryOnFailedConnect(true)
 	ops = append(ops, op)
 
 	url := strings.Join(natsConfig.EndPoints, ",")
@@ -194,11 +216,12 @@ func (c *Cluster) InitNats(natsConfig conf.Nats) {
 	connect, err := nats.Connect(url, ops...)
 	if err != nil {
 		logm.ErrorfE("连接nats服务器失败 err : %s", err.Error())
-		return
+		return false
 	}
 
 	c.natsClient = connect
-	logm.InfofE("连接nats服务器成功url: %s", url)
+
+	return true
 }
 
 func (c *Cluster) AddClusterNode(ctx context.Context, info *rpc3.ClusterInfo) {
