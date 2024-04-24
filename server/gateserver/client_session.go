@@ -141,15 +141,8 @@ func (p *ClientSession) HandleTest(ctx context.Context, test *pb.Test) {
 func (p *ClientSession) HandleLoginAccount(ctx context.Context, msg *pb.LoginAccountReq) {
 	head := ctx.Value("rpcHead").(rpc3.RpcHead)
 
-	// 只有connID，其他的账号id 和玩家id还没有
-	player := new(Player)
-	player.State = base.LoginState_AccountLogining
-	player.ConnID = head.ConnID
-
-	//entity.GEntityMgr.SendMsg(head, "PlayerMgr.AccountLogining", player)
-
+	// 账号登录
 	funcName := "AccountMgr.LoginAccountRequest"
-
 	p.SendToWorldServer(head, funcName, msg)
 }
 
