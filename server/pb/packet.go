@@ -53,7 +53,7 @@ func Marshal(head *rpc3.RpcHead, funcName *string, params ...interface{}) rpc3.R
 	for i := 0; i < length; i++ {
 		err := enc.Encode(params[i])
 		if err != nil {
-			logm.ErrorfE("gob 编码错误 那么：%s, err: %s", *funcName, err.Error())
+			logm.ErrorfE("gob 编码错误 方法:%s, err: %s", *funcName, err.Error())
 		} else {
 			//logm.DebugfE("编码成功")
 		}
