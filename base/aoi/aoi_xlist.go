@@ -1,12 +1,14 @@
 package aoi
 
+import "github.com/mx5566/server/base"
+
 type AoiXList struct {
-	interDist int32 //兴趣范围
+	interDist float32 //兴趣范围
 	head      *AoiNode
 	tail      *AoiNode
 }
 
-func NewAoiXlist(interDist int32) *AoiXList {
+func NewAoiXlist(interDist float32) *AoiXList {
 	return &AoiXList{
 		interDist: interDist,
 		head:      nil,
@@ -63,7 +65,7 @@ func (l *AoiXList) remove(node *AoiNode) {
 	}
 }
 
-func (l *AoiXList) move(node *AoiNode, xOld int32) {
+func (l *AoiXList) move(node *AoiNode, xOld base.Coord) {
 	xNew := node.aoi.x
 	if xNew > xOld {
 		// moving to next ...
@@ -132,8 +134,8 @@ func (l *AoiXList) move(node *AoiNode, xOld int32) {
 }
 
 func (l *AoiXList) mark(node *AoiNode) {
-	minPos := node.aoi.x - l.interDist // 左边界
-	maxPos := node.aoi.x + l.interDist // 又边界
+	minPos := node.aoi.x - base.Coord(l.interDist) // 左边界
+	maxPos := node.aoi.x + base.Coord(l.interDist) // 又边界
 
 	pre := node.xPrev
 	for pre != nil && pre.aoi.x >= minPos {
@@ -149,8 +151,8 @@ func (l *AoiXList) mark(node *AoiNode) {
 }
 
 func (l *AoiXList) notifyByMark(node *AoiNode) {
-	minPos := node.aoi.x - l.interDist // 左边界
-	maxPos := node.aoi.x + l.interDist // 又边界
+	minPos := node.aoi.x - base.Coord(l.interDist) // 左边界
+	maxPos := node.aoi.x + base.Coord(l.interDist) // 又边界
 
 	pre := node.xPrev
 	for pre != nil && pre.aoi.x >= minPos {

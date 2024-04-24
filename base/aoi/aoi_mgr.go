@@ -1,5 +1,7 @@
 package aoi
 
+import "github.com/mx5566/server/base"
+
 // aoi十字链表节点
 type AoiNode struct {
 	aoi *AOI
@@ -16,14 +18,14 @@ type AoiManager struct {
 }
 
 // 在地图场景里面初始化
-func NewAoiAmager(interDist int32) *AoiManager {
+func NewAoiAmager(interDist float32) *AoiManager {
 	return &AoiManager{
 		xList: NewAoiXlist(interDist),
 		yList: NewAoiYlist(interDist),
 	}
 }
 
-func (m *AoiManager) Enter(aoi *AOI, x, y int32) {
+func (m *AoiManager) Enter(aoi *AOI, x, y base.Coord) {
 	aoi.y = y
 	aoi.x = x
 
@@ -54,7 +56,7 @@ func (m *AoiManager) Leave(aoi *AOI) {
 
 }
 
-func (m *AoiManager) Move(aoi *AOI, x, y int32) {
+func (m *AoiManager) Move(aoi *AOI, x, y base.Coord) {
 	oldX := aoi.x
 	oldY := aoi.y
 	aoi.x, aoi.y = x, y
@@ -78,7 +80,7 @@ func (m *AoiManager) Mark(node *AoiNode) {
 			// 移动之后玩家还在事业范围内
 			key.markVal = -1 // 避免下面notify再次通知客户端
 		} else {
-			// 不在事业范围了，徐亚哦从列表移除掉
+			// 不在视野范围了，从列表移除掉
 			// 从自己的列表移除掉
 			delete(node.neighbors, key)
 			node.aoi.unit.OnLeaveAoi(key.aoi)

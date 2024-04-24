@@ -1,17 +1,21 @@
 package aoi
 
+import "github.com/mx5566/server/base"
+
 type AOI struct {
-	x        int32    // x方向格子坐标
-	y        int32    // y方向格子坐标
-	unit     IUnit    // aoi目标对象
-	realNode *AoiNode // 实际的节点指针
+	x          base.Coord // x方向格子坐标
+	y          base.Coord // y方向格子坐标
+	unit       ICallBack  // aoi目标对象
+	EntityData interface{}
+	realNode   *AoiNode // 实际的节点指针
 }
 
-type IUnit interface {
+type ICallBack interface {
 	OnEnterAoi(aoi *AOI)
 	OnLeaveAoi(aoi *AOI)
 }
 
-func InitAoi(aoi *AOI, u IUnit) {
+func InitAoi(aoi *AOI, u ICallBack, d interface{}) {
 	aoi.unit = u
+	aoi.EntityData = d
 }
