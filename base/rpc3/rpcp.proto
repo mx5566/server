@@ -29,6 +29,7 @@ enum ServiceType {
     GameServer = 2;
     LoginServer = 3;
     WorldServer = 4;
+    SceneServer= 5;
 };
 
 message ClusterInfo {
@@ -66,4 +67,15 @@ message Module  {
     ModuleType mType  = 1;  // 模块类型
     uint32 ClusterID = 2;  // 所在的服务器的id
     int64 ID = 3; // 模块的ID索引
+}
+
+enum MailType {
+    Player = 0; // 玩家
+}
+
+message MailBox {
+    MailType mType = 1; // 类型
+    uint32 ClusterID = 2;  // 所在的服务器的id
+    int64 ID = 3; // ID
+    
 }
