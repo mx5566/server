@@ -6,7 +6,7 @@
 
 3、输入命令行可以查看所有的内存分配的分配
 	2.1 火焰图 go tool pprof -http=:8882 http://localhost:6060/debug/pprof/allocs
-	2.2 进入交互界面 go tool http://localhost:6060/debug/pprof/allocs
+	2.2 进入交互界面 go tool pprof http://localhost:6060/debug/pprof/allocs
 
 4、输入命令行可以查看所有的cpu分配的分配
 	4.1 火焰图 go tool pprof -http=:8882 http://localhost:6060/debug/pprof/profile
@@ -14,7 +14,8 @@
 
 
 5、go test -bench  可以生成 cpu和内存的文件
-
+    go test -bench . -cpuprofile=cpu.prof
+    go test -bench . -memprofile=./mem.prof
 
 
 
