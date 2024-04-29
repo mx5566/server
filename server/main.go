@@ -5,6 +5,7 @@ import (
 	"github.com/mx5566/server/base/network"
 	"github.com/mx5566/server/server/gameserver"
 	"github.com/mx5566/server/server/gateserver"
+	"github.com/mx5566/server/server/sceneserver"
 	"github.com/mx5566/server/server/worldserver"
 	"os"
 	"os/signal"
@@ -56,7 +57,8 @@ func main() {
 
 	} else if args[1] == "world" {
 		worldserver.SERVER.Init()
-
+	} else if args[1] == "scene" {
+		sceneserver.SERVER.Init()
 	}
 	/*
 		s := new(network.ServerSocket)
