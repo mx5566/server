@@ -8,6 +8,7 @@ type AOI struct {
 	unit       ICallBack  // aoi目标对象
 	EntityData interface{}
 	realNode   *AoiNode // 实际的节点指针
+	ID         int64
 }
 
 type ICallBack interface {

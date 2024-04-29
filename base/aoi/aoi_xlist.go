@@ -1,6 +1,8 @@
 package aoi
 
-import "github.com/mx5566/server/base"
+import (
+	"github.com/mx5566/server/base"
+)
 
 type AoiXList struct {
 	interDist float32 //兴趣范围
@@ -141,12 +143,14 @@ func (l *AoiXList) mark(node *AoiNode) {
 	for pre != nil && pre.aoi.x >= minPos {
 		pre.markVal += 1
 		pre = pre.xPrev
+
 	}
 
 	next := node.xNext
 	for next != nil && next.aoi.x < maxPos {
 		next.markVal += 1
 		next = next.xNext
+
 	}
 }
 
@@ -156,6 +160,8 @@ func (l *AoiXList) notifyByMark(node *AoiNode) {
 
 	pre := node.xPrev
 	for pre != nil && pre.aoi.x >= minPos {
+		//log.Println("--------------- ", unsafe.Sizeof((*pre)))
+
 		if pre.markVal == 2 {
 			// 表示需要通知进入
 			node.neighbors[pre] = struct{}{}
