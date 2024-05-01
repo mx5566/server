@@ -100,3 +100,24 @@ func (r *HashRing) GetNode(node string) (uint32, error) {
 
 	return r.hashMap[r.keys[idx]], nil
 }
+
+func (r *HashRing) GetNodeint(id int64) (uint32, error) {
+	r.Lock()
+	defer r.Unlock()
+	length := len(r.keys)
+	if length == 0 {
+		return 0, errors.New("Not Found")
+	}
+
+	node := strconv.FormatInt(id, 10)
+	hash := r.hashFunc([]byte(node))
+	idx := sort.Search(length, func(i int) bool {
+		return r.keys[i] >= hash
+	})
+
+	if idx == length {
+		idx = idx % length
+	}
+
+	return r.hashMap[r.keys[idx]], nil
+}

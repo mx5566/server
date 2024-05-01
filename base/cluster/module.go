@@ -131,6 +131,14 @@ func (m *ModuleMgr) GetModuleNum(t rpc3.ModuleType) int {
 	return length
 }
 
+func (m *ModuleMgr) GetModule(t rpc3.ModuleType, index int64) *rpc3.Module {
+	m.moduleMutex[t].Lock()
+	ret := m.moduleAgents[t][index]
+	m.moduleMutex[t].Unlock()
+
+	return ret
+}
+
 func (m *ModuleMgr) Register(module *rpc3.Module, agent *ModuleAgent) bool {
 	//设置租约时间
 	leaseResp, err := m.lease.Grant(context.Background(), m.timeGrant)

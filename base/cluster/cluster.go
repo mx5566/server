@@ -7,20 +7,20 @@ import (
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/base/conf"
+	"github.com/mx5566/server/base/consistency"
 	"github.com/mx5566/server/base/entity"
 	"github.com/mx5566/server/base/etcd3"
 	"github.com/mx5566/server/base/network"
 	"github.com/mx5566/server/base/rpc3"
 	"github.com/mx5566/server/server/pb"
 	"github.com/nats-io/nats.go"
-	"hash/crc32"
 	"strings"
 	"sync"
 )
 
 var GCluster Cluster
 
-const ServerTypeMax = int(rpc3.ServiceType_WorldServer) + 1
+const ServerTypeMax = int(rpc3.ServiceType_SceneServer) + 1
 
 type OP struct {
 	Module     conf.ModuleP
@@ -47,6 +47,8 @@ type Cluster struct {
 	*rpc3.ClusterInfo
 	clusterMap   [ServerTypeMax]map[uint32]*rpc3.ClusterInfo
 	clusterMutex sync.Mutex
+	hashRingMap  [ServerTypeMax]*consistency.HashRing
+	hashMutex    sync.Mutex
 
 	serviceRegister  *etcd3.ServiceRegister
 	serviceDiscovery *etcd3.ServiceDiscovery
@@ -72,17 +74,17 @@ func (c *Cluster) Send(packet rpc3.RpcPacket) {
 		entity.GEntityMgr.Send(packet)
 	case rpc3.SendType_SendType_Single:
 		if head.DestServerType == rpc3.ServiceType_WorldServer {
-			// 有多个worldserver 发送那个呢
-			// 先随机一个服务器
-			clusterID := c.clusterMap[head.DestServerType][crc32.ChecksumIEEE([]byte("0.0.0.0:9999"))]
-			if clusterID == nil {
-				logm.ErrorfE("worldserver没找到")
-				return
+			// 不知道那个服务器
+			if head.DestServerID == 0 {
+				count := c.moduleP.ModuleCount[head.ClassName]
+
+				index := head.ID % count
+
+				mInfo := c.moduleMgr.GetModule(rpc3.ModuleType(rpc3.ModuleType_value[head.ClassName]), index)
+				head.DestServerID = mInfo.ClusterID
 			}
 
-			top := fmt.Sprintf("%s%s/%d", base.ServiceName, head.DestServerType.String(), clusterID.Id())
-
-			head.DestServerID = clusterID.Id()
+			top := fmt.Sprintf("%s%s/%d", base.ServiceName, head.DestServerType.String(), head.DestServerID)
 
 			buff, _ := proto.Marshal(&packet)
 			_ = c.natsClient.Publish(top, buff)
@@ -105,8 +107,12 @@ func (c *Cluster) Send(packet rpc3.RpcPacket) {
 	}
 }
 
-func (c *Cluster) RandomClusterByType(serviceType rpc3.ServiceType) *rpc3.ClusterInfo {
-	return nil
+func (c *Cluster) RandomClusterByType(serviceType rpc3.ServiceType, id int64) uint32 {
+	c.hashMutex.Lock()
+	node, _ := c.hashRingMap[serviceType].GetNodeint(id)
+	c.hashMutex.Unlock()
+
+	return node
 
 }
 
@@ -142,6 +148,7 @@ func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config conf.Service
 
 	for i := 0; i < ServerTypeMax; i++ {
 		c.clusterMap[i] = make(map[uint32]*rpc3.ClusterInfo)
+		c.hashRingMap[i] = consistency.NewRing(nil)
 	}
 
 	c.Entity.Init()
@@ -229,6 +236,10 @@ func (c *Cluster) AddClusterNode(ctx context.Context, info *rpc3.ClusterInfo) {
 	c.clusterMap[info.GetServiceType()][info.Id()] = info
 	c.clusterMutex.Unlock()
 
+	c.hashMutex.Lock()
+	c.hashRingMap[info.GetServiceType()].Add(info.Ips())
+	c.hashMutex.Unlock()
+
 	logm.InfofE("增加集群信息: %v", info)
 }
 
@@ -236,6 +247,10 @@ func (c *Cluster) DelClusterNode(ctx context.Context, info *rpc3.ClusterInfo) {
 	c.clusterMutex.Lock()
 	delete(c.clusterMap[info.GetServiceType()], info.Id())
 	c.clusterMutex.Unlock()
+
+	c.hashMutex.Lock()
+	c.hashRingMap[info.GetServiceType()].Remove(info.Ips())
+	c.hashMutex.Unlock()
 
 	logm.InfofE("移除集群信息: %v", info)
 
