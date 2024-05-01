@@ -19,3 +19,7 @@ func (x *ClusterInfo) GetTopicServerType() string {
 	top := fmt.Sprintf("%s%s", base.ServiceName, x.GetServiceType().String())
 	return top
 }
+
+func (x *ClusterInfo) Ips() string {
+	return fmt.Sprintf("%s:%d", x.Ip, x.Port)
+}
