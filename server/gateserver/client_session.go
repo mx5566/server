@@ -56,6 +56,7 @@ func (p *ClientSession) Init() {
 	p.RegisterPacket(&pb.Test{}, "gateserver<-ClientSession.HandleTest")
 	p.RegisterPacket(&pb.Disconnect{}, "gateserver<-ClientSession.HandleDisconnect")
 	p.RegisterPacket(&pb.LoginAccountReq{}, "gateserver<-ClientSession.HandleLoginAccount")
+	p.RegisterPacket(&pb.LoginPlayerReq{}, "gateserver<-ClientSession.HandleLoginPlayer")
 
 	p.Entity.Init()
 	p.Entity.Start()
@@ -102,7 +103,7 @@ func (p *ClientSession) HandlePacket(packet rpc3.Packet) {
 	head := &rpc3.RpcHead{}
 	head.SrcServerID = SERVER.GetID()
 	head.ConnID = connId
-	head.ID = p.GetID()
+	//head.ID = p.GetID()
 
 	_ = proto.Unmarshal(msg.MsgBody, protoMsg)
 
@@ -128,8 +129,8 @@ func (p *ClientSession) HandlePacket(packet rpc3.Packet) {
 }
 
 func (p *ClientSession) HandleTest(ctx context.Context, test *pb.Test) {
-	//TODO
 	head := ctx.Value("rpcHead").(rpc3.RpcHead)
+	//TODO
 
 	funcName := "AccountMgr.LoginAccountRequest"
 
@@ -141,8 +142,17 @@ func (p *ClientSession) HandleTest(ctx context.Context, test *pb.Test) {
 func (p *ClientSession) HandleLoginAccount(ctx context.Context, msg *pb.LoginAccountReq) {
 	head := ctx.Value("rpcHead").(rpc3.RpcHead)
 
+	head.ID = int64(crc32.ChecksumIEEE([]byte(msg.UserName)))
 	// 账号登录
 	funcName := "AccountMgr.LoginAccountRequest"
+	p.SendToWorldServer(head, funcName, msg)
+}
+
+func (p *ClientSession) HandleLoginPlayer(ctx context.Context, msg *pb.LoginPlayerReq) {
+	head := ctx.Value("rpcHead").(rpc3.RpcHead)
+
+	head.ID = msg.AccountID
+	funcName := "AccountMgr.LoginPlayerRequest"
 	p.SendToWorldServer(head, funcName, msg)
 }
 

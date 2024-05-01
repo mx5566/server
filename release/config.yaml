@@ -6,6 +6,7 @@ DB:
   password: 123456
   maxIdleConns: 500
   maxOpenConns: 1000
+  port: 27017
 
 # 服务器端口配置
 world:
@@ -31,9 +32,6 @@ etcd:
 # module object同步
 moduleetcd:
   endpoints:
-    - http://127.0.0.1:2379
-    - http://127.0.0.1:3379
-    - http://127.0.0.1:4379
   granttime: 30
 
 

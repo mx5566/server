@@ -21,6 +21,7 @@ message LoginAccountReq {
 message LoginAccontRep {
   int64  AccountId = 1;
   repeated  PlayerList pList = 2; // 角色列表
+  int32 errCode = 3;  // 错误码
 }
 
 message PlayerList {
@@ -28,6 +29,7 @@ message PlayerList {
   string PlayerName = 2; // 名字
   int64 Gold = 3; // 金币数量
   int32 Level = 4; // 等级
+  int64 AccountID = 5;
 }
 
 message Test {
@@ -40,4 +42,8 @@ message Disconnect {
   uint32 connId = 1;
 }
 
-//
+//角色登录请求
+message LoginPlayerReq {
+  int64 PlayerId = 1; // 角色ID
+  int64 AccountID = 2;
+}
