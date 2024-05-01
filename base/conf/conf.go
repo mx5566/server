@@ -14,6 +14,7 @@ type DB struct {
 	Password     string `yaml:"password"`
 	MaxIdleConns int32  `yaml:"maxIdleConns"`
 	MaxOpenConns int32  `yaml:"maxOpenConns"`
+	Port         uint16 `yaml:"port"`
 }
 
 type Server struct {

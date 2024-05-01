@@ -75,7 +75,8 @@ func NewMGDB[T any](database string, collection string) *MongoDB[T] {
 func (mg *MongoDB[T]) InsertOne(ctx context.Context, value T) *mongo.InsertOneResult {
 	result, err := mg.getCollection().InsertOne(ctx, value)
 	if err != nil {
-		panic(err)
+		logm.ErrorfE("数据库插入数据失败:%s", err.Error())
+		return nil
 	}
 	return result
 }
@@ -94,9 +95,9 @@ func (mg *MongoDB[T]) InsertMultiple(ctx context.Context, data []T) *mongo.Inser
 }
 
 // 根据字段名和值查询一条记录
-func (mg *MongoDB[T]) FindOne(ctx context.Context, filter filter) (T, error) {
+func (mg *MongoDB[T]) FindOne(ctx context.Context, filter filter, ops *options.FindOneOptions) (T, error) {
 	var t T
-	err := mg.getCollection().FindOne(ctx, filter).Decode(&t)
+	err := mg.getCollection().FindOne(ctx, filter, ops).Decode(&t)
 	if err != nil {
 		return t, err
 	}

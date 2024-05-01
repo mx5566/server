@@ -6,7 +6,9 @@ import (
 	"github.com/mx5566/server/base/conf"
 	"github.com/mx5566/server/base/entity"
 	"github.com/mx5566/server/base/network"
+	"github.com/mx5566/server/base/orm"
 	"github.com/mx5566/server/base/rpc3"
+	"github.com/mx5566/server/server/worldserver/account"
 )
 
 type Config struct {
@@ -15,6 +17,7 @@ type Config struct {
 	conf.ServiceEtcd `yaml:"etcd"`
 	conf.Nats        `yaml:"nats"`
 	conf.ModuleP     `yaml:"module"`
+	conf.DB          `yaml:"DB"`
 }
 
 type WorldServer struct {
@@ -25,11 +28,15 @@ type WorldServer struct {
 var SERVER WorldServer
 
 func (gs *WorldServer) Init() {
+	// 日志初始化
+	logm.Init("worldserver", map[string]string{"errFile": "world_server_error.log", "logFile": "world_server.log"}, "debug")
+
 	// 配置文件加载
 	conf.ReadConf("./config.yaml", &gs.config)
 
-	// 日志初始化
-	logm.Init("worldserver", map[string]string{"errFile": "world_server_error.log", "logFile": "world_server.log"}, "debug")
+	// 数据库
+	orm.OpenMongodb(gs.config.DB)
+
 	s := new(network.ServerSocket)
 	s.Init(gs.config.Server.Ip, gs.config.Server.Port)
 	s.Start()
@@ -49,7 +56,7 @@ func (gs *WorldServer) Init() {
 }
 
 func (gs *WorldServer) InitMgr() {
-	GAccountMgr.Init()
+	account.GAccountMgr.Init()
 }
 
 // 可以用IP+PORT 求一个哈希值
