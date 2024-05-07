@@ -2,7 +2,7 @@
 DB:
   ip: 127.0.0.1
   name: test
-  user: root
+  user: mengxiang
   password: 123456
   maxIdleConns: 500
   maxOpenConns: 1000
@@ -32,8 +32,14 @@ etcd:
 # module object同步
 moduleetcd:
   endpoints:
+    - http://127.0.0.1:2379
   granttime: 30
 
+# mailbox
+mailboxetcd:
+  endpoints:
+    - http://127.0.0.1:2379
+  granttime: 30
 
 # nats
 nats:
