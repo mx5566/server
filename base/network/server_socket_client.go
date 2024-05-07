@@ -126,17 +126,19 @@ func (s *ServerSocketClient) Run() bool {
 
 		n, err := s.conn.Read(buff)
 		if err == io.EOF {
+			fmt.Printf("远程链接：%s已经关闭！\n", s.conn.RemoteAddr().String())
+
 			// 通知服务器自己断开了
 			s.OnNetFail()
 
-			fmt.Printf("远程链接：%s已经关闭！\n", s.conn.RemoteAddr().String())
 			return false
 		}
 
 		if err != nil {
+			fmt.Printf("数据接收错误：%s 错误: %s\n", s.conn.RemoteAddr().String(), err.Error())
+
 			s.OnNetFail()
 
-			fmt.Printf("数据接收错误：%s 错误: %s\n", s.conn.RemoteAddr().String(), err.Error())
 			return false
 		}
 

@@ -61,6 +61,7 @@ func (s *ServerSocket) DelConn(ConnId uint32) {
 	s.clientMutex.Lock()
 	delete(s.Clients, ConnId)
 	s.clientMutex.Unlock()
+
 }
 
 func (s *ServerSocket) AddConn(conn *net.TCPConn) {
@@ -86,11 +87,10 @@ func (s *ServerSocket) AddConn(conn *net.TCPConn) {
 func (s *ServerSocket) GetConn(connId uint32) *ServerSocketClient {
 	s.clientMutex.Lock()
 	ss, ok := s.Clients[connId]
+	s.clientMutex.Unlock()
 	if ok {
 		return ss
 	}
-	s.clientMutex.Unlock()
-
 	return nil
 }
 
@@ -146,8 +146,19 @@ func (s *ServerSocket) Run() bool {
 		}
 
 		s.AddConn(conn)
-
 	}
 
 	return false
+}
+
+func (s *ServerSocket) StopOneClient(ConnId uint32) {
+	s.clientMutex.Lock()
+
+	defer s.clientMutex.Unlock()
+	c, ok := s.Clients[ConnId]
+	if !ok {
+		return
+	}
+
+	c.Stop()
 }

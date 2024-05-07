@@ -6,7 +6,6 @@ import (
 	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base"
 	"github.com/mx5566/server/base/rpc3"
-	"log"
 	"net"
 )
 
@@ -50,10 +49,6 @@ func (s *Socket) GetConnId() uint32 {
 
 func (s *Socket) SetSessionType(sessionType SESSION_TYPE) {
 	s.sessionType = sessionType
-}
-
-func (s *Socket) name() {
-
 }
 
 func (s *Socket) GetSessionType() SESSION_TYPE {
@@ -169,21 +164,20 @@ func (s *Socket) Connect() bool {
 	var strRemote = fmt.Sprintf("%s:%d", s.Ip, s.Port)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", strRemote)
 	if err != nil {
-		log.Printf("%v", err)
+		logm.ErrorfE("连接服务器失败%v, %s", err, strRemote)
 		return false
 	}
 
-	fmt.Println("------- ", strRemote)
-
 	conn, err1 := net.DialTCP("tcp4", nil, tcpAddr)
 	if err1 != nil {
+		logm.ErrorfE("连接服务器失败%v, %s", err1, strRemote)
 		return false
 	}
 
 	conn.SetNoDelay(true)
 	s.conn = conn
 
-	fmt.Printf("连接成功，请输入信息！\n")
+	logm.DebugfE("连接成功，请输入信息: %s！", strRemote)
 	return true
 }
 

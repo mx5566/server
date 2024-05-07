@@ -29,11 +29,11 @@ func (s *ClientSocket) Init(ip string, port uint16) bool {
 }
 
 func (s *ClientSocket) Start() bool {
-	if s.Socket.Connect() {
-		// 启动一个协成接收数据
-		go s.Run()
+	if !s.Socket.Connect() {
+		return false
 	}
-
+	// 启动一个协成接收数据
+	go s.Run()
 	return true
 }
 
