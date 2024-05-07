@@ -18,6 +18,7 @@ type Config struct {
 	conf.Nats        `yaml:"nats"`
 	conf.ModuleP     `yaml:"module"`
 	conf.DB          `yaml:"DB"`
+	conf.MailBoxEtcd `yaml:"mailboxetcd"`
 }
 
 type WorldServer struct {
@@ -47,7 +48,10 @@ func (gs *WorldServer) Init() {
 		Ip:          gs.config.Server.Ip,
 		Port:        uint32(gs.config.Server.Port),
 		ServiceType: rpc3.ServiceType_WorldServer,
-	}, gs.config.ServiceEtcd, gs.config.Nats, cluster.WithModuleEtcd(gs.config.ModuleEtcd, gs.config.ModuleP))
+	}, gs.config.ServiceEtcd,
+		gs.config.Nats,
+		cluster.WithModuleEtcd(gs.config.ModuleEtcd, gs.config.ModuleP),
+		cluster.WithMailBoxEtcd(gs.config.MailBoxEtcd))
 
 	cluster.GCluster.BindPacketFunc(entity.GEntityMgr.PacketFunc)
 
