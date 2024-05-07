@@ -29,7 +29,7 @@ func (m *ModuleMgr) Init(endPoints []string, t int64) {
 
 	client, err := clientv3.New(conf)
 	if err != nil {
-		logm.PanicfE("服务注册模块启动失败: %v, 错误: %s\n", endPoints, err.Error())
+		logm.PanicfE("ModuleMgr连接etcd3模块启动失败: %v, 错误: %s\n", endPoints, err.Error())
 		return
 	}
 	lease := clientv3.NewLease(client)
@@ -78,7 +78,6 @@ func (m *ModuleMgr) GetAll() {
 	i := 0
 	for _, kv := range resp.Kvs {
 		i++
-		logm.ErrorE("++++++++++++++++++", i, " ---- ", kv.Lease)
 		m.AddModule(kv.Value)
 	}
 }
@@ -100,7 +99,7 @@ func (m *ModuleMgr) AddModule(data []byte) {
 	m.moduleAgents[module.MType][module.GetID()] = module
 	m.moduleMutex[module.MType].Unlock()
 
-	logm.DebugfE("模块服务增加新模块成功:type:%s, ID:%d, clusterID:%d", module.MType.String(), module.ID, module.ClusterID)
+	logm.DebugfE("增加模块成功:type:%s, ID:%d, clusterID:%d", module.MType.String(), module.ID, module.ClusterID)
 }
 
 func (m *ModuleMgr) DelModule(data []byte) {
@@ -120,7 +119,7 @@ func (m *ModuleMgr) DelModule(data []byte) {
 	delete(m.moduleAgents[module.MType], module.GetID())
 	m.moduleMutex[module.MType].Unlock()
 
-	logm.DebugfE("模块服务删除模块成功:type:%s, ID:%d, clusterID:%d", module.MType.String(), module.ID, module.ClusterID)
+	logm.DebugfE("删除模块成功:type:%s, ID:%d, clusterID:%d", module.MType.String(), module.ID, module.ClusterID)
 }
 
 func (m *ModuleMgr) GetModuleNum(t rpc3.ModuleType) int {
@@ -143,7 +142,7 @@ func (m *ModuleMgr) Register(module *rpc3.Module, agent *ModuleAgent) bool {
 	//设置租约时间
 	leaseResp, err := m.lease.Grant(context.Background(), m.timeGrant)
 	if err != nil {
-		logm.ErrorfE("设置租约时间错误: %s\n", err.Error())
+		logm.ErrorfE("模块续租时间错误: %s", err.Error())
 		return false
 	}
 
@@ -155,22 +154,20 @@ func (m *ModuleMgr) Register(module *rpc3.Module, agent *ModuleAgent) bool {
 	tx := m.client.Txn(context.Background())
 
 	// CAS
-	logm.DebugfE("提交事务的数据:%s, %s", key, string(val))
 	tx.If(clientv3.Compare(clientv3.CreateRevision(key), "=", 0)).Then(clientv3.OpPut(key, string(val), clientv3.WithLease(leaseResp.ID))).Else()
 
 	resp, err := tx.Commit()
 	if err != nil {
-		logm.ErrorfE("etcd3提交模块事务失败: %s %s", err.Error(), module.String())
+		logm.ErrorfE("模块事务提交失败: %s %s", err.Error(), module.String())
 		return false
 	}
 
 	if !resp.Succeeded {
-		logm.ErrorfE("etcd3提交模块事务处理失败: %s %d %d", module.MType.String(), module.ID, module.ClusterID)
+		logm.ErrorfE("模块事务处理失败: %s %d %d", module.MType.String(), module.ID, module.ClusterID)
 		return false
 	}
 
 	logm.DebugfE("事务提交数据: %s %d %d", module.MType.String(), module.ID, module.ClusterID)
-
 	return true
 }
 
@@ -180,8 +177,6 @@ func (m *ModuleMgr) Lease(agent *ModuleAgent) bool {
 		logm.ErrorfE("etcd moudle lease KeepAliveOnce error: %s \n", err.Error())
 		return false
 	}
-
-	//logm.DebugfE("ModuleMgr lease:%d  %d", resp.ID, agent.leaseID)
 
 	return true
 }

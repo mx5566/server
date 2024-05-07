@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"hash/crc32"
+	"math"
 	"reflect"
 	"runtime"
 	"strings"
@@ -25,12 +26,14 @@ const ServiceName = "Server/"
 const ModuleNameDir = "Module/"
 
 // 对象注册的前缀
-const ObjectDir = "Object/"
+const MailBoxDir = "MailBox/"
 
 const (
 	Json = ".json"
 	Xlsx = ".xlsx"
 )
+
+const INVALID_ACCOUNTID int64 = math.MaxInt64
 
 type LoginState uint8
 

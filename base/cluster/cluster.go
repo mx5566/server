@@ -23,8 +23,9 @@ var GCluster Cluster
 const ServerTypeMax = int(rpc3.ServiceType_SceneServer) + 1
 
 type OP struct {
-	Module     conf.ModuleP
-	ModuleEtcd conf.ModuleEtcd
+	Module      conf.ModuleP
+	ModuleEtcd  conf.ModuleEtcd
+	MailBoxEtcd conf.MailBoxEtcd
 }
 
 type OpOption func(op *OP)
@@ -39,6 +40,11 @@ func WithModuleEtcd(etcd conf.ModuleEtcd, mo conf.ModuleP) OpOption {
 	return func(op *OP) {
 		op.ModuleEtcd = etcd
 		op.Module = mo
+	}
+}
+func WithMailBoxEtcd(etcd conf.MailBoxEtcd) OpOption {
+	return func(op *OP) {
+		op.MailBoxEtcd = etcd
 	}
 }
 
@@ -59,6 +65,8 @@ type Cluster struct {
 
 	moduleMgr ModuleMgr
 	moduleP   conf.ModuleP
+
+	mailBox MailBox
 }
 
 func (c *Cluster) SendMsg(head *rpc3.RpcHead, funcName string, param ...interface{}) {
@@ -89,7 +97,7 @@ func (c *Cluster) Send(packet rpc3.RpcPacket) {
 			buff, _ := proto.Marshal(&packet)
 			_ = c.natsClient.Publish(top, buff)
 
-			logm.ErrorfE("发送数据到worlsserv: %s", top)
+			logm.DebugfE("发送数据到worlsserv: %s", top)
 		} else if head.DestServerType == rpc3.ServiceType_GateServer {
 			top := fmt.Sprintf("%s%s/%d", base.ServiceName, head.DestServerType.String(), head.DestServerID)
 
@@ -97,6 +105,8 @@ func (c *Cluster) Send(packet rpc3.RpcPacket) {
 			_ = c.natsClient.Publish(top, buff)
 		} else if head.DestServerType == rpc3.ServiceType_GameServer {
 			top := fmt.Sprintf("%s%s/%d", base.ServiceName, head.DestServerType.String(), head.DestServerID)
+
+			// 对于跨gameserver的, 不知道对方在哪个服务器
 
 			buff, _ := proto.Marshal(&packet)
 			_ = c.natsClient.Publish(top, buff)
@@ -169,6 +179,10 @@ func (c *Cluster) InitCluster(clusterInfo *rpc3.ClusterInfo, config conf.Service
 	if len(op.ModuleEtcd.EndPoints) > 0 {
 		c.moduleMgr.Init(op.ModuleEtcd.EndPoints, op.ModuleEtcd.GrantTime)
 		c.moduleP = op.Module
+	}
+
+	if len(op.MailBoxEtcd.EndPoints) > 0 {
+		c.mailBox.Init(op.MailBoxEtcd.EndPoints, op.MailBoxEtcd.GrantTime)
 	}
 
 }
@@ -269,4 +283,8 @@ func (c *Cluster) GetModuleMax(t rpc3.ModuleType) int64 {
 	}
 
 	return 0
+}
+
+func (c *Cluster) GetMailBox(playerId int64) *rpc3.MailBox {
+	return c.mailBox.GetMailBox(playerId)
 }

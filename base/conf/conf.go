@@ -32,6 +32,11 @@ type ModuleEtcd struct {
 	GrantTime int64    `yaml:"granttime"`
 }
 
+type MailBoxEtcd struct {
+	EndPoints []string `yaml:"endpoints"`
+	GrantTime int64    `yaml:"granttime"`
+}
+
 type Nats struct {
 	EndPoints []string `yaml:"endpoints"`
 }
