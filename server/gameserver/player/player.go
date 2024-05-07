@@ -7,7 +7,6 @@ import (
 	"github.com/mx5566/server/base/entity"
 	"github.com/mx5566/server/base/orm/mongodb"
 	"github.com/mx5566/server/base/rpc3"
-	"github.com/mx5566/server/server/gameserver"
 	"github.com/mx5566/server/server/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -53,10 +52,10 @@ func (p *Player) Login(gateserverID uint32) {
 	p.playerData = player
 
 	cluster.GCluster.SendMsg(&rpc3.RpcHead{
-		SrcServerID:  gameserver.SERVER.GetID(),
+		SrcServerID:  cluster.GCluster.Id(),
 		DestServerID: cluster.GCluster.RandomClusterByType(rpc3.ServiceType_SceneServer, p.playerId),
 		ID:           p.playerId,
 	}, "sceneserver<-MapMgr.EnterMap",
-		999, p.playerId, p.GateServerId, gameserver.SERVER.GetID())
+		999, p.playerId, p.GateServerId, cluster.GCluster.Id())
 	// 进入地图
 }

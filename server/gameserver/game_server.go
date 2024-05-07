@@ -8,6 +8,8 @@ import (
 	"github.com/mx5566/server/base/network"
 	"github.com/mx5566/server/base/orm"
 	"github.com/mx5566/server/base/rpc3"
+	"github.com/mx5566/server/server/gameserver/player"
+
 	"github.com/mx5566/server/server/table"
 )
 
@@ -57,7 +59,7 @@ func (gs *GameServer) Init() {
 }
 
 func (gs *GameServer) InitMgr() {
-
+	player.PLAYERMGR.Init()
 }
 
 func (gs *GameServer) TestLoadTable() {

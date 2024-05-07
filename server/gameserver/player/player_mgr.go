@@ -8,6 +8,8 @@ import (
 	"reflect"
 )
 
+var PLAYERMGR PlayerMgr
+
 type PlayerMgr struct {
 	entity.Entity
 	entity.EntityPool
