@@ -47,3 +47,25 @@ message LoginPlayerReq {
   int64 PlayerId = 1; // 角色ID
   int64 AccountID = 2;
 }
+
+message LoginPlayerRep {
+  int32 errCode = 1;  // 错误码
+  int64 PlayerId = 2; // 角色ID
+
+}
+
+message CreatePlayerReq {
+  string Name = 1;  // 角色名字
+  int64 AccountID = 2; // 账号ID
+}
+
+message CreatePlayerRep {
+  int32 errCode = 1;  // 错误码
+  int64 PlayerId = 2; // 角色ID
+  string Name = 3;  // 角色名字
+}
+
+message RoleSelectListRep {
+  int64  AccountId = 1;
+  repeated  PlayerList pList = 2; // 角色列表
+}

@@ -495,6 +495,234 @@ func (x *LoginPlayerReq) GetAccountID() int64 {
 	return 0
 }
 
+type LoginPlayerRep struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ErrCode  int32 `protobuf:"varint,1,opt,name=errCode,proto3" json:"errCode,omitempty"`   // 错误码
+	PlayerId int64 `protobuf:"varint,2,opt,name=PlayerId,proto3" json:"PlayerId,omitempty"` // 角色ID
+}
+
+func (x *LoginPlayerRep) Reset() {
+	*x = LoginPlayerRep{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_person_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LoginPlayerRep) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginPlayerRep) ProtoMessage() {}
+
+func (x *LoginPlayerRep) ProtoReflect() protoreflect.Message {
+	mi := &file_person_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginPlayerRep.ProtoReflect.Descriptor instead.
+func (*LoginPlayerRep) Descriptor() ([]byte, []int) {
+	return file_person_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *LoginPlayerRep) GetErrCode() int32 {
+	if x != nil {
+		return x.ErrCode
+	}
+	return 0
+}
+
+func (x *LoginPlayerRep) GetPlayerId() int64 {
+	if x != nil {
+		return x.PlayerId
+	}
+	return 0
+}
+
+type CreatePlayerReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name      string `protobuf:"bytes,1,opt,name=Name,proto3" json:"Name,omitempty"`            // 角色名字
+	AccountID int64  `protobuf:"varint,2,opt,name=AccountID,proto3" json:"AccountID,omitempty"` // 账号ID
+}
+
+func (x *CreatePlayerReq) Reset() {
+	*x = CreatePlayerReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_person_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CreatePlayerReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatePlayerReq) ProtoMessage() {}
+
+func (x *CreatePlayerReq) ProtoReflect() protoreflect.Message {
+	mi := &file_person_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatePlayerReq.ProtoReflect.Descriptor instead.
+func (*CreatePlayerReq) Descriptor() ([]byte, []int) {
+	return file_person_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *CreatePlayerReq) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreatePlayerReq) GetAccountID() int64 {
+	if x != nil {
+		return x.AccountID
+	}
+	return 0
+}
+
+type CreatePlayerRep struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ErrCode  int32  `protobuf:"varint,1,opt,name=errCode,proto3" json:"errCode,omitempty"`   // 错误码
+	PlayerId int64  `protobuf:"varint,2,opt,name=PlayerId,proto3" json:"PlayerId,omitempty"` // 角色ID
+	Name     string `protobuf:"bytes,3,opt,name=Name,proto3" json:"Name,omitempty"`          // 角色名字
+}
+
+func (x *CreatePlayerRep) Reset() {
+	*x = CreatePlayerRep{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_person_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CreatePlayerRep) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatePlayerRep) ProtoMessage() {}
+
+func (x *CreatePlayerRep) ProtoReflect() protoreflect.Message {
+	mi := &file_person_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatePlayerRep.ProtoReflect.Descriptor instead.
+func (*CreatePlayerRep) Descriptor() ([]byte, []int) {
+	return file_person_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CreatePlayerRep) GetErrCode() int32 {
+	if x != nil {
+		return x.ErrCode
+	}
+	return 0
+}
+
+func (x *CreatePlayerRep) GetPlayerId() int64 {
+	if x != nil {
+		return x.PlayerId
+	}
+	return 0
+}
+
+func (x *CreatePlayerRep) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type RoleSelectListRep struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	AccountId int64         `protobuf:"varint,1,opt,name=AccountId,proto3" json:"AccountId,omitempty"`
+	PList     []*PlayerList `protobuf:"bytes,2,rep,name=pList,proto3" json:"pList,omitempty"` // 角色列表
+}
+
+func (x *RoleSelectListRep) Reset() {
+	*x = RoleSelectListRep{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_person_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RoleSelectListRep) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RoleSelectListRep) ProtoMessage() {}
+
+func (x *RoleSelectListRep) ProtoReflect() protoreflect.Message {
+	mi := &file_person_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RoleSelectListRep.ProtoReflect.Descriptor instead.
+func (*RoleSelectListRep) Descriptor() ([]byte, []int) {
+	return file_person_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *RoleSelectListRep) GetAccountId() int64 {
+	if x != nil {
+		return x.AccountId
+	}
+	return 0
+}
+
+func (x *RoleSelectListRep) GetPList() []*PlayerList {
+	if x != nil {
+		return x.PList
+	}
+	return nil
+}
+
 var File_person_proto protoreflect.FileDescriptor
 
 var file_person_proto_rawDesc = []byte{
@@ -539,7 +767,27 @@ var file_person_proto_rawDesc = []byte{
 	0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x50,
 	0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x41, 0x63, 0x63, 0x6f, 0x75,
 	0x6e, 0x74, 0x49, 0x44, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x41, 0x63, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x49, 0x44, 0x42, 0x06, 0x5a, 0x04, 0x2e, 0x3b, 0x70, 0x62, 0x62, 0x06, 0x70,
+	0x75, 0x6e, 0x74, 0x49, 0x44, 0x22, 0x46, 0x0a, 0x0e, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x50, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x52, 0x65, 0x70, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x72, 0x72, 0x43, 0x6f,
+	0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x65, 0x72, 0x72, 0x43, 0x6f, 0x64,
+	0x65, 0x12, 0x1a, 0x0a, 0x08, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x08, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x22, 0x43, 0x0a,
+	0x0f, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x52, 0x65, 0x71,
+	0x12, 0x12, 0x0a, 0x04, 0x4e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
+	0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x49,
+	0x44, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x49, 0x44, 0x22, 0x5b, 0x0a, 0x0f, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x52, 0x65, 0x70, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x72, 0x72, 0x43, 0x6f, 0x64, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x65, 0x72, 0x72, 0x43, 0x6f, 0x64, 0x65, 0x12,
+	0x1a, 0x0a, 0x08, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x08, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x4e,
+	0x61, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x4e, 0x61, 0x6d, 0x65, 0x22,
+	0x54, 0x0a, 0x11, 0x52, 0x6f, 0x6c, 0x65, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x4c, 0x69, 0x73,
+	0x74, 0x52, 0x65, 0x70, 0x12, 0x1c, 0x0a, 0x09, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x49,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x49, 0x64, 0x12, 0x21, 0x0a, 0x05, 0x70, 0x4c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x0b, 0x2e, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x05,
+	0x70, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x06, 0x5a, 0x04, 0x2e, 0x3b, 0x70, 0x62, 0x62, 0x06, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
@@ -555,7 +803,7 @@ func file_person_proto_rawDescGZIP() []byte {
 	return file_person_proto_rawDescData
 }
 
-var file_person_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_person_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_person_proto_goTypes = []interface{}{
 	(*Person)(nil),             // 0: Person
 	(*RegisterAccountReq)(nil), // 1: RegisterAccountReq
@@ -565,14 +813,19 @@ var file_person_proto_goTypes = []interface{}{
 	(*Test)(nil),               // 5: Test
 	(*Disconnect)(nil),         // 6: Disconnect
 	(*LoginPlayerReq)(nil),     // 7: LoginPlayerReq
+	(*LoginPlayerRep)(nil),     // 8: LoginPlayerRep
+	(*CreatePlayerReq)(nil),    // 9: CreatePlayerReq
+	(*CreatePlayerRep)(nil),    // 10: CreatePlayerRep
+	(*RoleSelectListRep)(nil),  // 11: RoleSelectListRep
 }
 var file_person_proto_depIdxs = []int32{
 	4, // 0: LoginAccontRep.pList:type_name -> PlayerList
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	4, // 1: RoleSelectListRep.pList:type_name -> PlayerList
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_person_proto_init() }
@@ -677,6 +930,54 @@ func file_person_proto_init() {
 				return nil
 			}
 		}
+		file_person_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LoginPlayerRep); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_person_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreatePlayerReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_person_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreatePlayerRep); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_person_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RoleSelectListRep); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -684,7 +985,7 @@ func file_person_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_person_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
