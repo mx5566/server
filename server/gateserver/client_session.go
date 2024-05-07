@@ -43,7 +43,16 @@ func (p *ClientSession) SendToWorldServer(head rpc3.RpcHead, funcName string, pa
 	head.DestServerType = rpc3.ServiceType_WorldServer
 	head.MsgSendType = rpc3.SendType_SendType_Single
 
-	cluster.GCluster.SendMsg(&head, funcName, param...)
+	if head.ID == 0 {
+		accountID := PLAYERMGR.GetAccountID(head.ConnID)
+		if accountID != base.INVALID_ACCOUNTID {
+			head.ID = accountID
+			cluster.GCluster.SendMsg(&head, funcName, param...)
+		}
+	} else {
+		cluster.GCluster.SendMsg(&head, funcName, param...)
+	}
+
 }
 
 func (p *ClientSession) Init() {
@@ -57,6 +66,7 @@ func (p *ClientSession) Init() {
 	p.RegisterPacket(&pb.Disconnect{}, "gateserver<-ClientSession.HandleDisconnect")
 	p.RegisterPacket(&pb.LoginAccountReq{}, "gateserver<-ClientSession.HandleLoginAccount")
 	p.RegisterPacket(&pb.LoginPlayerReq{}, "gateserver<-ClientSession.HandleLoginPlayer")
+	p.RegisterPacket(&pb.CreatePlayerReq{}, "gateserver<-ClientSession.HandleCreatePlayer")
 
 	p.Entity.Init()
 	p.Entity.Start()
@@ -91,7 +101,7 @@ func (p *ClientSession) HandlePacket(packet rpc3.Packet) {
 
 	// 根绝客户端的二进制消息,判断消息id是不是注册了
 	if _, ok := p.HrsId[msg.MsgId]; !ok {
-		logm.ErrorfE("错误的解析包 Id: %d \n", msg.MsgId)
+		logm.ErrorfE("消息没有注册 Id: %d \n", msg.MsgId)
 		return
 	}
 
@@ -123,7 +133,7 @@ func (p *ClientSession) HandlePacket(packet rpc3.Packet) {
 		//entity.GEntityMgr.Send(rpcPacket)
 
 		entity.GEntityMgr.SendMsg(*head, funcName, protoMsg)
-	} else if head.DestServerType == rpc3.ServiceType_LoginServer {
+	} else if head.DestServerType == rpc3.ServiceType_WorldServer {
 		p.SendToWorldServer(*head, funcName, protoMsg)
 	}
 }
@@ -140,6 +150,7 @@ func (p *ClientSession) HandleTest(ctx context.Context, test *pb.Test) {
 }
 
 func (p *ClientSession) HandleLoginAccount(ctx context.Context, msg *pb.LoginAccountReq) {
+	logm.DebugfE("网关账号登录")
 	head := ctx.Value("rpcHead").(rpc3.RpcHead)
 
 	head.ID = int64(crc32.ChecksumIEEE([]byte(msg.UserName)))
@@ -151,16 +162,23 @@ func (p *ClientSession) HandleLoginAccount(ctx context.Context, msg *pb.LoginAcc
 func (p *ClientSession) HandleLoginPlayer(ctx context.Context, msg *pb.LoginPlayerReq) {
 	head := ctx.Value("rpcHead").(rpc3.RpcHead)
 
+	logm.DebugfE("角色登录的请求")
 	head.ID = msg.AccountID
 	funcName := "AccountMgr.LoginPlayerRequest"
 	p.SendToWorldServer(head, funcName, msg)
 }
 
+func (p ClientSession) HandleCreatePlayer(ctx context.Context, msg *pb.CreatePlayerReq) {
+	head := ctx.Value("rpcHead").(rpc3.RpcHead)
+
+	logm.DebugfE("创建角色请求")
+	head.ID = msg.AccountID
+	funcName := "AccountMgr.CreatePlayerRequest"
+	p.SendToWorldServer(head, funcName, msg)
+}
+
 func (p *ClientSession) HandleDisconnect(ctx context.Context, dis *pb.Disconnect) {
 	logm.DebugfE("客户端断开连接:%d\n", dis.ConnId)
-
-	//
-	entity.GEntityMgr.SendMsg(rpc3.RpcHead{ConnID: dis.GetConnId()}, "PlayerMgr.AccountLogining", dis.GetConnId())
 
 	// 通知到游戏服务器玩家下线了做业务处理
 }

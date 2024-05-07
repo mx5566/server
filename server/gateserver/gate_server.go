@@ -49,7 +49,7 @@ func (gs *GateServer) Init() {
 		Ip:          gs.config.Server.Ip,
 		Port:        uint32(gs.config.Server.Port),
 		ServiceType: rpc3.ServiceType_GateServer,
-	}, gs.config.ServiceEtcd, gs.config.Nats)
+	}, gs.config.ServiceEtcd, gs.config.Nats, cluster.WithModuleEtcd(gs.config.ModuleEtcd, gs.config.ModuleP))
 
 	cluster.GCluster.BindPacketFunc(HandleMsg)
 

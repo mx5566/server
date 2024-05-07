@@ -7,3 +7,11 @@ type PlayerSimpleInfo struct {
 	Gold      int64  `bson:"gold"`
 	AccountID int64  `bson:"accountID"`
 }
+
+type PlayerData struct {
+	SimpleData PlayerSimpleInfo `bson:"simpleData"`
+	EquipData  EquipData        `bson:"equipData"`
+}
+
+type EquipData struct {
+}
