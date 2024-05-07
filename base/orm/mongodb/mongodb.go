@@ -45,6 +45,7 @@ func NewMongoDB(ctx context.Context, appUri string) error {
 		logm.PanicfE("mongodb 数据库连接失败: %s", err.Error())
 		return err
 	}
+
 	//检查连接
 	err = c.Ping(ctx, nil)
 	if err != nil {
@@ -173,4 +174,9 @@ func (mg *MongoDB[T]) ObjectID(id string) primitive.ObjectID {
 		logm.PanicE(err)
 	}
 	return objectId
+}
+
+func (mg *MongoDB[T]) GetCount(ctx context.Context, filter filter) (int64, error) {
+	count, err := mg.getCollection().CountDocuments(ctx, filter)
+	return count, err
 }

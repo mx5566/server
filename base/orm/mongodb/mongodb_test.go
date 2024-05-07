@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/mx5566/logm"
+	"github.com/mx5566/server/server/model"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"testing"
 )
@@ -14,6 +18,39 @@ type Test struct {
 	Title         string             `bson:"title"`
 	Author        string             `bson:"author"`
 	YearPublished int64              `bson:"year_published"`
+}
+
+func TestGameTbl(t *testing.T) {
+	ctx := context.Background()
+
+	//连接数据库
+	err := NewMongoDB(ctx, "mongodb://mengxiang:123456@localhost:27017/?authSource=admin")
+	if err != nil {
+		log.Fatalf("%s", err)
+		return
+	}
+
+	filter := Newfilter().EQ("simpleData.accountID", 4376152684625920)
+
+	pInstance := NewMGDB[model.PlayerData]("game", "player_tbl")
+
+	ops := options.FindOptions{}
+	ops.SetProjection(bson.D{{"_id", 0}, {"simpleData", 1}})
+
+	// 查找角色列表 查找角色
+	players, err := pInstance.Find(context.Background(), filter, 0)
+	if err != nil {
+		logm.ErrorfE("数据库查找角色失败:%s", err.Error())
+		return
+	}
+
+	var pls []*model.PlayerSimpleInfo
+	for _, v := range players {
+		player := v.SimpleData
+		pls = append(pls, &player)
+
+		t.Logf("用户信息:%v\n", v)
+	}
 }
 
 func TestMongo(t *testing.T) {
@@ -55,7 +92,7 @@ func TestMongo(t *testing.T) {
 
 	//查询
 	filter := Newfilter().EQ("title", "test").EQ("author", "author test")
-	result, err := mgdb.FindOne(ctx, filter)
+	result, err := mgdb.FindOne(ctx, filter, nil)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}

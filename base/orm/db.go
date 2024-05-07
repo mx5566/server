@@ -15,7 +15,7 @@ func OpenMongodb(db conf.DB) {
 	uri := fmt.Sprintf("mongodb://%s:%s@%s:%d/?authSource=admin", db.User, db.Password, db.Ip, db.Port)
 	err := mongodb.NewMongoDB(ctx, uri)
 	if err != nil {
-		logm.FatalfE("%s", err)
+		logm.FatalfE("%s %s", err, uri)
 		return
 	}
 }
