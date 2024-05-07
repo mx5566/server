@@ -18,6 +18,8 @@ type PlayerMgr struct {
 }
 
 func (m *PlayerMgr) Init() {
+	m.mailBoxAgents = make(map[int64]*cluster.MailBoxAgent)
+
 	m.Entity.Init()
 	m.EntityPool.InitPool(reflect.TypeOf(Player{}))
 	entity.GEntityMgr.RegisterEntity(m)

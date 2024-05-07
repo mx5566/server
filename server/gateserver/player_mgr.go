@@ -2,6 +2,7 @@ package gateserver
 
 import (
 	"context"
+	"github.com/mx5566/logm"
 	"github.com/mx5566/server/base/cluster"
 	"github.com/mx5566/server/base/entity"
 	"github.com/mx5566/server/base/rpc3"
@@ -44,21 +45,29 @@ func (m *PlayerMgr) AccountLogining(ctx context.Context, player *Player) {
 
 }
 
+func (m *PlayerMgr) DeleteRepeateLogin(playerId int64) {
+	m.Mutex.Lock()
+	connId, ok := m.PlayerIDConnID[playerId]
+	if !ok {
+		m.Mutex.Unlock()
+		return
+	}
+
+	// 玩家有一个旧的连接
+	delete(m.PlayerIDConnID, playerId)
+	delete(m.connIdPlayers, connId)
+	m.Mutex.Unlock()
+
+	// 服务器主动断开连接
+	SERVER.GetServer().StopOneClient(connId)
+}
+
 func (m *PlayerMgr) PlayerLogin(ctx context.Context, mailBox *rpc3.MailBox) {
 	head := ctx.Value("rpcHead").(rpc3.RpcHead)
 
+	logm.DebugfE("收到gameserver发送的玩家登录的请求:%s", mailBox.String())
 	playerId := mailBox.ID
-	m.Mutex.Lock()
-	connId, ok := m.PlayerIDConnID[playerId]
-	if ok {
-		// 玩家有一个旧的连接
-		delete(m.PlayerIDConnID, playerId)
-		delete(m.connIdPlayers, connId)
-		m.Mutex.Unlock()
-
-		// 服务器主动断开连接
-		SERVER.GetServer().StopOneClient(connId)
-	}
+	m.DeleteRepeateLogin(playerId)
 
 	p := new(Player)
 	p.PlayerID = playerId
@@ -67,7 +76,7 @@ func (m *PlayerMgr) PlayerLogin(ctx context.Context, mailBox *rpc3.MailBox) {
 
 	m.Mutex.Lock()
 	m.PlayerIDConnID[playerId] = head.ConnID
-	m.connIdPlayers[connId] = p
+	m.connIdPlayers[head.ConnID] = p
 	m.Mutex.Unlock()
 
 	cluster.GCluster.SendMsg(&rpc3.RpcHead{
