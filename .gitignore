@@ -12,6 +12,7 @@ base/path/astar/layout.txt
 
 test.bat
 /release/log
+/release/server
 /base/aoiskiplist/test_aoi_proc.pprof
 /base/aoiskiplist/profile001.svg
 /base/aoiskiplist/mem.pprof
