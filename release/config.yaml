@@ -1,6 +1,6 @@
 # DB
 DB:
-  ip: 127.0.0.1
+  ip: 192.168.1.10
   name: test
   user: mengxiang
   password: 123456
@@ -24,27 +24,25 @@ gate:
 # 服发现
 etcd:
   endpoints:
-    - http://127.0.0.1:2379
-    - http://127.0.0.1:3379
-    - http://127.0.0.1:4379
+    - http://192.168.1.10:2379
   granttime: 30
 
 # module object同步
 moduleetcd:
   endpoints:
-    - http://127.0.0.1:2379
+    - http://192.168.1.10:2379
   granttime: 30
 
 # mailbox
 mailboxetcd:
   endpoints:
-    - http://127.0.0.1:2379
+    - http://192.168.1.10:2379
   granttime: 30
 
 # nats
 nats:
   endpoints:
-    - 127.0.0.1:4222
+    - 192.168.1.10:4222
 
 
 # module
