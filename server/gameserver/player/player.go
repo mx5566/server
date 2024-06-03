@@ -10,6 +10,7 @@ import (
 	"github.com/mx5566/server/server/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 type Player struct {
@@ -25,6 +26,9 @@ type Player struct {
 func (p *Player) Init() {
 	p.Entity.Init()
 	p.Entity.Start()
+
+	t := time.NewTicker(10)
+	t.Stop()
 }
 
 func (p *Player) updateLease() {
