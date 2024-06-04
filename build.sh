@@ -16,7 +16,7 @@ cd ${dir}/server
 export GOPROXY=https://goproxy.cn,direct
 
 go mod download
-go mod tidy
+# go mod tidy
 
 # 打印go的版本
 go version
