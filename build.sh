@@ -22,7 +22,7 @@ go mod tidy
 go version
 
 # 编译程序
-go build -o $binname
+echo `go build -o $binname`
 
 cp -afr $binname ../release
 chmod u+x ../release/$binname
