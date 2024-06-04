@@ -14,16 +14,16 @@ RUN sh build.sh ${BINNAME}
 EXPOSE 13000
 
 # VOLUME /app/release
-# WORKDIR /app/release
+WORKDIR /app/release
 
 # binaries
-FROM alpine:latest
+# FROM alpine:latest
 
-WORKDIR /release
+# WORKDIR /release
 
 ARG BINNAME=server
 ENV TYPE=gate
 
-COPY --from=BUILD /app/release/${BINNAME}   ./
+# COPY --from=BUILD /app/release/${BINNAME}   ./
 
 CMD if [ "${TYPE}" = "gate" ]; then sh start_gate.sh; elif [ "${TYPE}" = "game" ]; then sh start_game.sh; elif [ "${TYPE}" = "world"]; then sh start_world.sh; fi
