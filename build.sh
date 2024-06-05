@@ -13,6 +13,7 @@ echo $dir
 
 cd ${dir}/server
 # 设置临时环境变量
+export GO111MODULE='on'
 export GOPROXY=https://goproxy.cn,direct
 
 go mod download
@@ -22,7 +23,7 @@ go mod download
 go version
 
 # 编译程序
-echo `go build -o $binname`
+echo `CGO_ENABLED=0 go build -o $binname`
 
 cp -afr $binname ../release
 chmod u+x ../release/$binname
